@@ -1,6 +1,6 @@
-package org.edd255.lox.expr
+package dev.edd255.lox.expr
 
-import org.edd255.lox.Token
+import dev.edd255.lox.Token
 
 abstract class Expr {
     abstract fun <T> accept(visitor: Visitor<T>): T

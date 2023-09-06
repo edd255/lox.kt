@@ -1,4 +1,4 @@
-package org.edd255.lox
+package dev.edd255.lox
 
 class Scanner(private val source: String) {
     private val tokens: MutableList<Token> = mutableListOf()
