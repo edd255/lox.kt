@@ -17,7 +17,7 @@ fun main(args: Array<String>) {
         listOf(
             "Binary   : left: Expr, op: Token, right: Expr",
             "Grouping : expr: Expr",
-            "Literal  : value: Any",
+            "Literal  : value: Any?",
             "Unary    : op: Token, right: Expr"
         )
     )
@@ -28,9 +28,9 @@ class Generator {
         val path = "$outputDir/$baseName.kt"
         val writer = PrintWriter(path, "UTF-8")
 
-        writer.println("package org.edd255.lox.expr")
+        writer.println("package dev.edd255.lox.expr")
         writer.println()
-        writer.println("import org.edd255.lox.Token")
+        writer.println("import dev.edd255.lox.Token")
         writer.println()
         writer.println("abstract class $baseName {")
         writer.println("    abstract fun <T> accept(visitor: Visitor<T>): T")

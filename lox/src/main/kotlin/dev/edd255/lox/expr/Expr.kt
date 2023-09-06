@@ -20,7 +20,7 @@ class Grouping(val expr: Expr) : Expr() {
 }
 
 
-class Literal(val value: Any) : Expr() {
+class Literal(val value: Any?) : Expr() {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitLiteralExpr(this)
     }
