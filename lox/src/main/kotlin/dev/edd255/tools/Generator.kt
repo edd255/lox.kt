@@ -1,4 +1,4 @@
-package org.edd255.tool
+package dev.edd255.tools
 
 import java.io.PrintWriter
 import java.util.Locale

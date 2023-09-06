@@ -1,4 +1,4 @@
-package org.edd255.lox
+package dev.edd255.lox
 
 import java.io.BufferedReader
 import java.io.InputStreamReader

@@ -1,4 +1,4 @@
-package org.edd255.lox
+package dev.edd255.lox
 
 class Keywords {
     private val keywords: MutableMap<String, TokenType> = HashMap()

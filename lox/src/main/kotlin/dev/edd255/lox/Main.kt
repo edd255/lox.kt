@@ -1,10 +1,10 @@
-package org.edd255.lox
+package dev.edd255.lox
 
-import org.edd255.lox.expr.Binary
-import org.edd255.lox.expr.AstPrinter
-import org.edd255.lox.expr.Unary
-import org.edd255.lox.expr.Literal
-import org.edd255.lox.expr.Grouping
+import dev.edd255.lox.expr.Binary
+import dev.edd255.lox.expr.AstPrinter
+import dev.edd255.lox.expr.Unary
+import dev.edd255.lox.expr.Literal
+import dev.edd255.lox.expr.Grouping
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
