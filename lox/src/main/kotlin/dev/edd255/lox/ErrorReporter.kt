@@ -2,6 +2,7 @@ package dev.edd255.lox
 
 class ErrorReporter {
     var hadError: Boolean = false
+    var hadRuntimeError: Boolean = false
 
     fun error(token: Token, message: String) {
         if (token.type == TokenType.EOF) {
@@ -15,8 +16,13 @@ class ErrorReporter {
         report(line, "at end", message)
     }
 
-    fun report(line: Int, where: String, message: String) {
+    private fun report(line: Int, where: String, message: String) {
         System.err.println("[line $line] Error $where: $message")
         hadError = true
+    }
+
+    fun runtimeError(error: RuntimeError) {
+        println("${error.message}\n[line ${error.token.line}]")
+        hadRuntimeError = true
     }
 }

@@ -6,16 +6,19 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.system.exitProcess
-import dev.edd255.lox.expr.AstPrinter
 
 class Lox {
     private val errorReporter = ErrorReporter()
+    private val interpreter = Interpreter()
 
     fun runFile(path: String) {
         val bytes: ByteArray = Files.readAllBytes(Paths.get(path))
         run(String(bytes, Charset.defaultCharset()))
         if (errorReporter.hadError) {
             exitProcess(65)
+        }
+        if (errorReporter.hadRuntimeError) {
+            exitProcess(70)
         }
     }
 
@@ -34,10 +37,10 @@ class Lox {
         val scanner = Scanner(source)
         val tokens: List<Token> = scanner.scanTokens()
         val parser = Parser(tokens)
-        val expression = parser.parse()
+        val expr = parser.parse()
         if (errorReporter.hadError) {
-            return;
+            return
         }
-        println(AstPrinter().print(expression!!))
+        interpreter.interpret(expr)
     }
 }
