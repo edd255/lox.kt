@@ -73,7 +73,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun previous() : Token {
-        return tokens.get(current - 1)
+        return tokens[current - 1]
     }
 
     private fun comparison() : Expr {
