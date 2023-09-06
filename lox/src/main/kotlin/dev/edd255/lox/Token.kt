@@ -1,5 +1,5 @@
 package dev.edd255.lox
 
-class Token(private val type: TokenType, val lexeme: String, private val literal: Any?, private val line: Int) {
+class Token(val type: TokenType, val lexeme: String, val literal: Any?, val line: Int) {
     override fun toString(): String = "$type $lexeme $literal $line"
 }
