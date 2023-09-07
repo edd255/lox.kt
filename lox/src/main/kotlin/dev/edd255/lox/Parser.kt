@@ -1,6 +1,7 @@
 package dev.edd255.lox
 
-import dev.edd255.lox.expr.Expr import dev.edd255.lox.expr.Binary
+import dev.edd255.lox.expr.Expr
+import dev.edd255.lox.expr.Binary
 import dev.edd255.lox.expr.Grouping
 import dev.edd255.lox.expr.Literal
 import dev.edd255.lox.expr.Unary
@@ -20,7 +21,7 @@ class Parser(private val tokens: List<Token>) {
         class ParseError : RuntimeException()
     }
 
-    fun parse() : Expr? {
+    fun parse(): Expr? {
         return try {
             expression()
         } catch (error: ParseError) {
@@ -28,11 +29,11 @@ class Parser(private val tokens: List<Token>) {
         }
     }
 
-    private fun expression() : Expr {
+    private fun expression(): Expr {
         return equality()
     }
 
-    private fun equality() : Expr {
+    private fun equality(): Expr {
         var expr = comparison()
 
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
@@ -44,7 +45,7 @@ class Parser(private val tokens: List<Token>) {
         return expr
     }
 
-    private fun match(vararg types: TokenType) : Boolean {
+    private fun match(vararg types: TokenType): Boolean {
         for (type in types) {
             if (check(type)) {
                 advance()
@@ -54,29 +55,29 @@ class Parser(private val tokens: List<Token>) {
         return false
     }
 
-    private fun check(type: TokenType) : Boolean {
+    private fun check(type: TokenType): Boolean {
         if (isAtEnd()) return false
         return peek().type == type
     }
 
-    private fun advance() : Token {
+    private fun advance(): Token {
         if (!isAtEnd()) current++
         return previous()
     }
 
-    private fun isAtEnd() : Boolean {
+    private fun isAtEnd(): Boolean {
         return peek().type == TokenType.EOF
     }
 
-    private fun peek() : Token {
+    private fun peek(): Token {
         return tokens[current]
     }
 
-    private fun previous() : Token {
+    private fun previous(): Token {
         return tokens[current - 1]
     }
 
-    private fun comparison() : Expr {
+    private fun comparison(): Expr {
         var expr = term()
 
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
@@ -88,7 +89,7 @@ class Parser(private val tokens: List<Token>) {
         return expr
     }
 
-    private fun term() : Expr {
+    private fun term(): Expr {
         var expr = factor()
 
         while (match(TokenType.MINUS, TokenType.PLUS)) {
@@ -100,7 +101,7 @@ class Parser(private val tokens: List<Token>) {
         return expr
     }
 
-    private fun factor() : Expr {
+    private fun factor(): Expr {
         var expr = unary()
 
         while (match(TokenType.SLASH, TokenType.STAR)) {
@@ -112,7 +113,7 @@ class Parser(private val tokens: List<Token>) {
         return expr
     }
 
-    private fun unary() : Expr {
+    private fun unary(): Expr {
         if (match(TokenType.BANG, TokenType.MINUS)) {
             val operator = previous()
             val right = unary()
@@ -122,7 +123,7 @@ class Parser(private val tokens: List<Token>) {
         return primary()
     }
 
-    private fun primary() : Expr {
+    private fun primary(): Expr {
         if (match(TokenType.FALSE)) return Literal(false)
         if (match(TokenType.TRUE)) return Literal(true)
         if (match(TokenType.NIL)) return Literal(null)
@@ -140,14 +141,14 @@ class Parser(private val tokens: List<Token>) {
         throw error(peek(), "Expect expression.")
     }
 
-    private fun consume(type: TokenType, message: String) : Token {
+    private fun consume(type: TokenType, message: String): Token {
         if (check(type)) {
             return advance()
         }
         throw error(peek(), message)
     }
 
-    private fun error(token: Token, message: String) : ParseError {
+    private fun error(token: Token, message: String): ParseError {
         errorReporter.error(token, message)
         return ParseError()
     }
@@ -167,6 +168,7 @@ class Parser(private val tokens: List<Token>) {
                 TokenType.WHILE,
                 TokenType.PRINT,
                 TokenType.RETURN -> return
+
                 else -> {}
             }
 
