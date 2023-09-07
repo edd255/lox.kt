@@ -1,7 +1,7 @@
 package dev.edd255.lox
 
-import dev.edd255.lox.expr.Expr
 import dev.edd255.lox.expr.Binary
+import dev.edd255.lox.expr.Expr
 import dev.edd255.lox.expr.Grouping
 import dev.edd255.lox.expr.Literal
 import dev.edd255.lox.expr.Unary
@@ -167,7 +167,8 @@ class Parser(private val tokens: List<Token>) {
                 TokenType.IF,
                 TokenType.WHILE,
                 TokenType.PRINT,
-                TokenType.RETURN -> return
+                TokenType.RETURN,
+                -> return
 
                 else -> {}
             }

@@ -18,8 +18,8 @@ fun main(args: Array<String>) {
             "Binary   : left: Expr, op: Token, right: Expr",
             "Grouping : expr: Expr",
             "Literal  : value: Any?",
-            "Unary    : op: Token, right: Expr"
-        )
+            "Unary    : op: Token, right: Expr",
+        ),
     )
 }
 
