@@ -24,9 +24,27 @@ class Interpreter : Visitor<Any?> {
         val right = evaluate(expr.right)
 
         return when (expr.op.type) {
-            TokenType.MINUS -> { if (left is Double && right is Double) left - right else throw RuntimeError(expr.op, "Operand must be a number") }
-            TokenType.SLASH -> { if (left is Double && right is Double) left / right else throw RuntimeError(expr.op, "Operand must be a number") }
-            TokenType.STAR -> { if (left is Double && right is Double) left * right else throw RuntimeError(expr.op, "Operand must be a number") }
+            TokenType.MINUS -> {
+                if (left is Double && right is Double) left - right else throw RuntimeError(
+                    expr.op,
+                    "Operand must be a number"
+                )
+            }
+
+            TokenType.SLASH -> {
+                if (left is Double && right is Double) left / right else throw RuntimeError(
+                    expr.op,
+                    "Operand must be a number"
+                )
+            }
+
+            TokenType.STAR -> {
+                if (left is Double && right is Double) left * right else throw RuntimeError(
+                    expr.op,
+                    "Operand must be a number"
+                )
+            }
+
             TokenType.PLUS -> {
                 if (left is Double && right is Double) {
                     left + right
@@ -36,13 +54,40 @@ class Interpreter : Visitor<Any?> {
                     throw RuntimeError(expr.op, "Operands must be either numbers or strings")
                 }
             }
-            TokenType.GREATER -> { if (left is Double && right is Double) left > right else throw RuntimeError(expr.op, "Operand must be a number") }
-            TokenType.GREATER_EQUAL -> { if (left is Double && right is Double) left >= right else throw RuntimeError(expr.op, "Operand must be a number") }
-            TokenType.LESS -> { if (left is Double && right is Double) left < right else throw RuntimeError(expr.op, "Operand must be a number") }
-            TokenType.LESS_EQUAL -> { if (left is Double && right is Double) left <= right else throw RuntimeError(expr.op, "Operand must be a number") }
+
+            TokenType.GREATER -> {
+                if (left is Double && right is Double) left > right else throw RuntimeError(
+                    expr.op,
+                    "Operand must be a number"
+                )
+            }
+
+            TokenType.GREATER_EQUAL -> {
+                if (left is Double && right is Double) left >= right else throw RuntimeError(
+                    expr.op,
+                    "Operand must be a number"
+                )
+            }
+
+            TokenType.LESS -> {
+                if (left is Double && right is Double) left < right else throw RuntimeError(
+                    expr.op,
+                    "Operand must be a number"
+                )
+            }
+
+            TokenType.LESS_EQUAL -> {
+                if (left is Double && right is Double) left <= right else throw RuntimeError(
+                    expr.op,
+                    "Operand must be a number"
+                )
+            }
+
             TokenType.BANG_EQUAL -> !isEqual(left, right)
             TokenType.EQUAL_EQUAL -> isEqual(left, right)
-            else -> { null }
+            else -> {
+                null
+            }
         }
     }
 
@@ -57,7 +102,10 @@ class Interpreter : Visitor<Any?> {
     override fun visitUnaryExpr(expr: Unary): Any? {
         val right = evaluate(expr.right)
         return when (expr.op.type) {
-            TokenType.MINUS ->  { if (right is Double) -1 * right else null  }
+            TokenType.MINUS -> {
+                if (right is Double) -1 * right else null
+            }
+
             TokenType.BANG -> !isTruthy(right)
             else -> null
         }
@@ -77,7 +125,7 @@ class Interpreter : Visitor<Any?> {
         }
     }
 
-    private fun isEqual(a: Any?, b: Any?) : Boolean {
+    private fun isEqual(a: Any?, b: Any?): Boolean {
         return a == b
     }
 
@@ -91,6 +139,7 @@ class Interpreter : Visitor<Any?> {
                 }
                 text
             }
+
             else -> obj.toString()
         }
     }
