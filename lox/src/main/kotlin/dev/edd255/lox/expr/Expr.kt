@@ -12,13 +12,11 @@ class Binary(val left: Expr, val op: Token, val right: Expr) : Expr() {
     }
 }
 
-
 class Grouping(val expr: Expr) : Expr() {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitGroupingExpr(this)
     }
 }
-
 
 class Literal(val value: Any?) : Expr() {
     override fun <T> accept(visitor: Visitor<T>): T {
@@ -26,13 +24,11 @@ class Literal(val value: Any?) : Expr() {
     }
 }
 
-
 class Unary(val op: Token, val right: Expr) : Expr() {
     override fun <T> accept(visitor: Visitor<T>): T {
         return visitor.visitUnaryExpr(this)
     }
 }
-
 
 interface Visitor<T> {
     fun visitBinaryExpr(expr: Binary): T

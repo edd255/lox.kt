@@ -1,7 +1,7 @@
 package dev.edd255.lox.expr
 
 class AstPrinter : Visitor<String> {
-    fun print(expr: Expr) : String {
+    fun print(expr: Expr): String {
         return expr.accept(this)
     }
 

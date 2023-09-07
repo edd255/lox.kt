@@ -1,11 +1,11 @@
 package dev.edd255.lox
 
-import dev.edd255.lox.expr.Expr
-import dev.edd255.lox.expr.Visitor
 import dev.edd255.lox.expr.Binary
+import dev.edd255.lox.expr.Expr
 import dev.edd255.lox.expr.Grouping
-import dev.edd255.lox.expr.Unary
 import dev.edd255.lox.expr.Literal
+import dev.edd255.lox.expr.Unary
+import dev.edd255.lox.expr.Visitor
 
 class Interpreter : Visitor<Any?> {
     private val errorReporter = ErrorReporter()
@@ -25,24 +25,36 @@ class Interpreter : Visitor<Any?> {
 
         return when (expr.op.type) {
             TokenType.MINUS -> {
-                if (left is Double && right is Double) left - right else throw RuntimeError(
-                    expr.op,
-                    "Operand must be a number"
-                )
+                if (left is Double && right is Double) {
+                    left - right
+                } else {
+                    throw RuntimeError(
+                        expr.op,
+                        "Operand must be a number",
+                    )
+                }
             }
 
             TokenType.SLASH -> {
-                if (left is Double && right is Double) left / right else throw RuntimeError(
-                    expr.op,
-                    "Operand must be a number"
-                )
+                if (left is Double && right is Double) {
+                    left / right
+                } else {
+                    throw RuntimeError(
+                        expr.op,
+                        "Operand must be a number",
+                    )
+                }
             }
 
             TokenType.STAR -> {
-                if (left is Double && right is Double) left * right else throw RuntimeError(
-                    expr.op,
-                    "Operand must be a number"
-                )
+                if (left is Double && right is Double) {
+                    left * right
+                } else {
+                    throw RuntimeError(
+                        expr.op,
+                        "Operand must be a number",
+                    )
+                }
             }
 
             TokenType.PLUS -> {
@@ -56,31 +68,47 @@ class Interpreter : Visitor<Any?> {
             }
 
             TokenType.GREATER -> {
-                if (left is Double && right is Double) left > right else throw RuntimeError(
-                    expr.op,
-                    "Operand must be a number"
-                )
+                if (left is Double && right is Double) {
+                    left > right
+                } else {
+                    throw RuntimeError(
+                        expr.op,
+                        "Operand must be a number",
+                    )
+                }
             }
 
             TokenType.GREATER_EQUAL -> {
-                if (left is Double && right is Double) left >= right else throw RuntimeError(
-                    expr.op,
-                    "Operand must be a number"
-                )
+                if (left is Double && right is Double) {
+                    left >= right
+                } else {
+                    throw RuntimeError(
+                        expr.op,
+                        "Operand must be a number",
+                    )
+                }
             }
 
             TokenType.LESS -> {
-                if (left is Double && right is Double) left < right else throw RuntimeError(
-                    expr.op,
-                    "Operand must be a number"
-                )
+                if (left is Double && right is Double) {
+                    left < right
+                } else {
+                    throw RuntimeError(
+                        expr.op,
+                        "Operand must be a number",
+                    )
+                }
             }
 
             TokenType.LESS_EQUAL -> {
-                if (left is Double && right is Double) left <= right else throw RuntimeError(
-                    expr.op,
-                    "Operand must be a number"
-                )
+                if (left is Double && right is Double) {
+                    left <= right
+                } else {
+                    throw RuntimeError(
+                        expr.op,
+                        "Operand must be a number",
+                    )
+                }
             }
 
             TokenType.BANG_EQUAL -> !isEqual(left, right)
