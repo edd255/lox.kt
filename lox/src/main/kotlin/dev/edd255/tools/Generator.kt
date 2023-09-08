@@ -27,7 +27,6 @@ class Generator {
     fun defineAst(outputDir: String, baseName: String, types: List<String>) {
         val path = "$outputDir/$baseName.kt"
         val writer = PrintWriter(path, "UTF-8")
-
         writer.println("package dev.edd255.lox.expr")
         writer.println()
         writer.println("import dev.edd255.lox.Token")
@@ -35,16 +34,12 @@ class Generator {
         writer.println("abstract class $baseName {")
         writer.println("    abstract fun <T> accept(visitor: Visitor<T>): T")
         writer.println("}")
-
         for (type in types) {
             val className = type.split(":")[0].trim()
             val fields = type.split(":", ignoreCase = true, limit = 2)[1].trim()
             defineType(writer, baseName, className, fields)
-            writer.println()
         }
-
         defineVisitor(writer, baseName, types)
-
         writer.close()
     }
 
@@ -55,16 +50,20 @@ class Generator {
         while (fields.hasNext()) {
             val field = fields.next()
             if (fields.hasNext()) {
-                writer.print("val $field, ")
+                writer.print("private val $field, ")
             } else {
-                writer.print("val $field")
+                writer.print("private val $field")
             }
         }
         writer.println(") : $baseName() {")
-        writer.println("    override fun <T> accept(visitor: Visitor<T>): T {")
-        writer.println("        return visitor.visit$className$baseName(this)")
-        writer.println("    }")
-
+        writer.println("    override fun <T> accept(visitor: Visitor<T>): T = visitor.visit$className$baseName(this)")
+        val parts = fieldList.split(",").map { it.trim() }
+        for (part in parts) {
+            val keyValue = part.split(":").map { it.trim() }
+            val name = keyValue[0]
+            val type = keyValue[1]
+            writer.println("    fun get${capitalizeFirstChar(name)}(): $type = $name")
+        }
         writer.println("}")
     }
 
@@ -76,5 +75,14 @@ class Generator {
             writer.println("    fun visit$typeName$baseName(${baseName.lowercase(Locale.getDefault())}: $typeName): T")
         }
         writer.println("}")
+    }
+
+    fun capitalizeFirstChar(input: String): String {
+        if (input.isEmpty()) {
+            return input
+        }
+        val firstChar = input[0].uppercaseChar()
+        val restOfChars = input.substring(1)
+        return "$firstChar$restOfChars"
     }
 }
