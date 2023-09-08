@@ -1,25 +1,19 @@
 package dev.edd255.lox.expr
 
 class AstPrinter : Visitor<String> {
-    fun print(expr: Expr): String {
-        return expr.accept(this)
-    }
+    fun print(expr: Expr): String = expr.accept(this)
 
-    override fun visitBinaryExpr(expr: Binary): String {
-        return parenthesize(expr.op.lexeme, expr.left, expr.right)
-    }
+    override fun visitBinaryExpr(expr: Binary): String = parenthesize(
+        expr.getOp().getLexeme(),
+        expr.getLeft(),
+        expr.getRight(),
+    )
 
-    override fun visitGroupingExpr(expr: Grouping): String {
-        return parenthesize("group", expr.expr)
-    }
+    override fun visitGroupingExpr(expr: Grouping): String = parenthesize("group", expr.getExpr())
 
-    override fun visitLiteralExpr(expr: Literal): String {
-        return expr.value.toString()
-    }
+    override fun visitLiteralExpr(expr: Literal): String = expr.getValue().toString()
 
-    override fun visitUnaryExpr(expr: Unary): String {
-        return parenthesize(expr.op.lexeme, expr.right)
-    }
+    override fun visitUnaryExpr(expr: Unary): String = parenthesize(expr.getOp().getLexeme(), expr.getRight())
 
     private fun parenthesize(name: String, vararg exprs: Expr): String {
         val builder = StringBuilder()
