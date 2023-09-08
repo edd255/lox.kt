@@ -57,7 +57,7 @@ class Parser(private val tokens: List<Token>) {
 
     private fun check(type: TokenType): Boolean {
         if (isAtEnd()) return false
-        return peek().type == type
+        return peek().getType() == type
     }
 
     private fun advance(): Token {
@@ -66,7 +66,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun isAtEnd(): Boolean {
-        return peek().type == TokenType.EOF
+        return peek().getType() == TokenType.EOF
     }
 
     private fun peek(): Token {
@@ -129,7 +129,7 @@ class Parser(private val tokens: List<Token>) {
         if (match(TokenType.NIL)) return Literal(null)
 
         if (match(TokenType.NUMBER, TokenType.STRING)) {
-            return Literal(previous().literal)
+            return Literal(previous().getLiteral())
         }
 
         if (match(TokenType.LEFT_PAREN)) {
@@ -157,9 +157,9 @@ class Parser(private val tokens: List<Token>) {
         advance()
 
         while (!isAtEnd()) {
-            if (previous().type == TokenType.SEMICOLON) return
+            if (previous().getType() == TokenType.SEMICOLON) return
 
-            when (peek().type) {
+            when (peek().getType()) {
                 TokenType.CLASS,
                 TokenType.FUN,
                 TokenType.VAR,
