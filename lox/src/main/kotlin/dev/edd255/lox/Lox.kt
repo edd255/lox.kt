@@ -14,10 +14,10 @@ class Lox {
     fun runFile(path: String) {
         val bytes: ByteArray = Files.readAllBytes(Paths.get(path))
         run(String(bytes, Charset.defaultCharset()))
-        if (errorReporter.hadError) {
+        if (errorReporter.getHadError()) {
             exitProcess(65)
         }
-        if (errorReporter.hadRuntimeError) {
+        if (errorReporter.getHadRuntimeError()) {
             exitProcess(70)
         }
     }
@@ -29,7 +29,7 @@ class Lox {
             print(">>> ")
             val line = reader.readLine() ?: break
             run(line)
-            errorReporter.hadError = false
+            errorReporter.setHadError(false)
         }
     }
 
@@ -38,7 +38,7 @@ class Lox {
         val tokens: List<Token> = scanner.scanTokens()
         val parser = Parser(tokens)
         val expr = parser.parse()
-        if (errorReporter.hadError) {
+        if (errorReporter.getHadError()) {
             return
         }
         interpreter.interpret(expr)

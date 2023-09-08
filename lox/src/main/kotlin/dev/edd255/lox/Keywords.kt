@@ -22,7 +22,5 @@ class Keywords {
         keywords["while"] = TokenType.WHILE
     }
 
-    fun getKeywordType(text: String): TokenType? {
-        return keywords[text]
-    }
+    fun getKeywordType(text: String): TokenType? = keywords[text]
 }
