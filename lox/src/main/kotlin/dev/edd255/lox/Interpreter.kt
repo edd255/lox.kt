@@ -20,16 +20,16 @@ class Interpreter : Visitor<Any?> {
     }
 
     override fun visitBinaryExpr(expr: Binary): Any? {
-        val left = evaluate(expr.left)
-        val right = evaluate(expr.right)
+        val left = evaluate(expr.getLeft())
+        val right = evaluate(expr.getRight())
 
-        return when (expr.op.type) {
+        return when (expr.getOp().getType()) {
             TokenType.MINUS -> {
                 if (left is Double && right is Double) {
                     left - right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expr.getOp(),
                         "Operand must be a number",
                     )
                 }
@@ -40,7 +40,7 @@ class Interpreter : Visitor<Any?> {
                     left / right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expr.getOp(),
                         "Operand must be a number",
                     )
                 }
@@ -51,7 +51,7 @@ class Interpreter : Visitor<Any?> {
                     left * right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expr.getOp(),
                         "Operand must be a number",
                     )
                 }
@@ -63,7 +63,7 @@ class Interpreter : Visitor<Any?> {
                 } else if (left is String && right is String) {
                     left + right
                 } else {
-                    throw RuntimeError(expr.op, "Operands must be either numbers or strings")
+                    throw RuntimeError(expr.getOp(), "Operands must be either numbers or strings")
                 }
             }
 
@@ -72,7 +72,7 @@ class Interpreter : Visitor<Any?> {
                     left > right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expr.getOp(),
                         "Operand must be a number",
                     )
                 }
@@ -83,7 +83,7 @@ class Interpreter : Visitor<Any?> {
                     left >= right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expr.getOp(),
                         "Operand must be a number",
                     )
                 }
@@ -94,7 +94,7 @@ class Interpreter : Visitor<Any?> {
                     left < right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expr.getOp(),
                         "Operand must be a number",
                     )
                 }
@@ -105,7 +105,7 @@ class Interpreter : Visitor<Any?> {
                     left <= right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expr.getOp(),
                         "Operand must be a number",
                     )
                 }
@@ -120,16 +120,16 @@ class Interpreter : Visitor<Any?> {
     }
 
     override fun visitGroupingExpr(expr: Grouping): Any? {
-        return evaluate(expr.expr)
+        return evaluate(expr.getExpr())
     }
 
     override fun visitLiteralExpr(expr: Literal): Any? {
-        return expr.value
+        return expr.getValue()
     }
 
     override fun visitUnaryExpr(expr: Unary): Any? {
-        val right = evaluate(expr.right)
-        return when (expr.op.type) {
+        val right = evaluate(expr.getRight())
+        return when (expr.getOp().getType()) {
             TokenType.MINUS -> {
                 if (right is Double) -1 * right else null
             }

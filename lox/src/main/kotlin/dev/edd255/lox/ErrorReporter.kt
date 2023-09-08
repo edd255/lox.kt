@@ -1,20 +1,18 @@
 package dev.edd255.lox
 
 class ErrorReporter {
-    var hadError: Boolean = false
-    var hadRuntimeError: Boolean = false
+    private var hadError: Boolean = false
+    private var hadRuntimeError: Boolean = false
 
     fun error(token: Token, message: String) {
-        if (token.type == TokenType.EOF) {
-            report(token.line, "at end", message)
+        if (token.getType() == TokenType.EOF) {
+            report(token.getLine(), "at end", message)
         } else {
-            report(token.line, "at '$token.lexeme'", message)
+            report(token.getLine(), "at '$token.lexeme'", message)
         }
     }
 
-    fun error(line: Int, message: String) {
-        report(line, "at end", message)
-    }
+    fun error(line: Int, message: String) = report(line, "at end", message)
 
     private fun report(line: Int, where: String, message: String) {
         System.err.println("[line $line] Error $where: $message")
@@ -22,7 +20,14 @@ class ErrorReporter {
     }
 
     fun runtimeError(error: RuntimeError) {
-        println("${error.message}\n[line ${error.token.line}]")
+        println("${error.message}\n[line ${error.token.getLine()}]")
         hadRuntimeError = true
     }
+
+    fun setHadError(b: Boolean) {
+        hadError = b
+    }
+
+    fun getHadError(): Boolean = hadError
+    fun getHadRuntimeError(): Boolean = hadRuntimeError
 }

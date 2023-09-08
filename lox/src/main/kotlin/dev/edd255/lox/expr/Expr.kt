@@ -6,28 +6,27 @@ abstract class Expr {
     abstract fun <T> accept(visitor: Visitor<T>): T
 }
 
-class Binary(val left: Expr, val op: Token, val right: Expr) : Expr() {
-    override fun <T> accept(visitor: Visitor<T>): T {
-        return visitor.visitBinaryExpr(this)
-    }
+class Binary(private val left: Expr, private val op: Token, private val right: Expr) : Expr() {
+    override fun <T> accept(visitor: Visitor<T>): T = visitor.visitBinaryExpr(this)
+    fun getLeft(): Expr = left
+    fun getOp(): Token = op
+    fun getRight(): Expr = right
 }
 
-class Grouping(val expr: Expr) : Expr() {
-    override fun <T> accept(visitor: Visitor<T>): T {
-        return visitor.visitGroupingExpr(this)
-    }
+class Grouping(private val expr: Expr) : Expr() {
+    override fun <T> accept(visitor: Visitor<T>): T = visitor.visitGroupingExpr(this)
+    fun getExpr(): Expr = expr
 }
 
-class Literal(val value: Any?) : Expr() {
-    override fun <T> accept(visitor: Visitor<T>): T {
-        return visitor.visitLiteralExpr(this)
-    }
+class Literal(private val value: Any?) : Expr() {
+    override fun <T> accept(visitor: Visitor<T>): T = visitor.visitLiteralExpr(this)
+    fun getValue(): Any? = value
 }
 
-class Unary(val op: Token, val right: Expr) : Expr() {
-    override fun <T> accept(visitor: Visitor<T>): T {
-        return visitor.visitUnaryExpr(this)
-    }
+class Unary(private val op: Token, private val right: Expr) : Expr() {
+    override fun <T> accept(visitor: Visitor<T>): T = visitor.visitUnaryExpr(this)
+    fun getOp(): Token = op
+    fun getRight(): Expr = right
 }
 
 interface Visitor<T> {
