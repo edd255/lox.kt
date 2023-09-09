@@ -15,18 +15,22 @@ fun main(args: Array<String>) {
         outputDir,
         "Expr",
         listOf(
+            "Assign   : name: Token, value: Expr",
             "Binary   : left: Expr, op: Token, right: Expr",
             "Grouping : expr: Expr",
             "Literal  : value: Any?",
             "Unary    : op: Token, right: Expr",
+            "Variable : name: Token",
         ),
     )
     generator.defineAst(
         outputDir,
         "Stmt",
         listOf(
+            "Block    : stmts: List<Stmt>",
             "ExprStmt : expr: Expr",
             "Print    : expr: Expr",
+            "Var      : name: Token, initializer: Expr?",
         ),
     )
 }

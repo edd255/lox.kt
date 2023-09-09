@@ -6,6 +6,12 @@ abstract class Expr {
     abstract fun <T> accept(visitor: ExprVisitor<T>): T
 }
 
+class Assign(private val name: Token, private val value: Expr) : Expr() {
+    override fun <T> accept(visitor: ExprVisitor<T>): T = visitor.visitAssignExpr(this)
+    fun getName(): Token = name
+    fun getValue(): Expr = value
+}
+
 class Binary(private val left: Expr, private val op: Token, private val right: Expr) : Expr() {
     override fun <T> accept(visitor: ExprVisitor<T>): T = visitor.visitBinaryExpr(this)
     fun getLeft(): Expr = left
@@ -29,9 +35,16 @@ class Unary(private val op: Token, private val right: Expr) : Expr() {
     fun getRight(): Expr = right
 }
 
+class Variable(private val name: Token) : Expr() {
+    override fun <T> accept(visitor: ExprVisitor<T>): T = visitor.visitVariableExpr(this)
+    fun getName(): Token = name
+}
+
 interface ExprVisitor<T> {
+    fun visitAssignExpr(expr: Assign): T
     fun visitBinaryExpr(expr: Binary): T
     fun visitGroupingExpr(expr: Grouping): T
     fun visitLiteralExpr(expr: Literal): T
     fun visitUnaryExpr(expr: Unary): T
+    fun visitVariableExpr(expr: Variable): T
 }

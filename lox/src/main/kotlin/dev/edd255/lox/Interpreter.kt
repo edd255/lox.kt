@@ -4,6 +4,7 @@ import dev.edd255.lox.expr.*
 
 class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     private val errorReporter = ErrorReporter()
+    private var environment = Env()
 
     fun interpret(stmts: List<Stmt>) {
         try {
@@ -13,6 +14,12 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         } catch (error: RuntimeError) {
             errorReporter.runtimeError(error)
         }
+    }
+
+    override fun visitAssignExpr(expr: Assign): Any? {
+        val value = evaluate(expr.getValue())
+        value?.let { environment.assign(expr.getName(), it) }
+        return value
     }
 
     override fun visitBinaryExpr(expr: Binary): Any? {
@@ -121,6 +128,10 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         }
     }
 
+    override fun visitVariableExpr(expr: Variable): Any? {
+        return environment.get(expr.getName())
+    }
+
     private fun evaluate(expr: Expr?): Any? {
         assert(expr != null)
         if (expr == null) return null
@@ -129,6 +140,18 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     private fun execute(stmt: Stmt?) {
         stmt?.accept(this)
+    }
+
+    private fun executeBlock(stmts: List<Stmt>, env: Env) {
+        val previous = this.environment
+        try {
+            this.environment = env
+            for (stmt in stmts) {
+                execute(stmt)
+            }
+        } finally {
+            this.environment = previous
+        }
     }
 
     private fun isTruthy(obj: Any?): Boolean {
@@ -155,6 +178,10 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         }
     }
 
+    override fun visitBlockStmt(stmt: Block) {
+        executeBlock(stmt.getStmts(), Env(environment))
+    }
+
     override fun visitExprStmt(stmt: ExprStmt) {
         evaluate(stmt.getExpr())
     }
@@ -162,5 +189,10 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     override fun visitPrintStmt(stmt: Print) {
         val value = evaluate(stmt.getExpr())
         println(stringify(value))
+    }
+
+    override fun visitVarStmt(stmt: Var) {
+        val value = evaluate(stmt.getInitializer())
+        value?.let { environment.define(stmt.getName().getLexeme(), it) }
     }
 }
