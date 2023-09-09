@@ -2,8 +2,11 @@ package dev.edd255.lox
 
 import dev.edd255.lox.expr.Binary
 import dev.edd255.lox.expr.Expr
+import dev.edd255.lox.expr.ExprStmt
 import dev.edd255.lox.expr.Grouping
 import dev.edd255.lox.expr.Literal
+import dev.edd255.lox.expr.Print
+import dev.edd255.lox.expr.Stmt
 import dev.edd255.lox.expr.Unary
 
 // expression -> equality ;
@@ -21,15 +24,34 @@ class Parser(private val tokens: List<Token>) {
         class ParseError : RuntimeException()
     }
 
-    fun parse(): Expr? {
-        return try {
-            expression()
-        } catch (error: ParseError) {
-            null
+    fun parse(): List<Stmt> {
+        val statements = mutableListOf<Stmt>()
+        while (!isAtEnd()) {
+            statements.add(statement())
         }
+        return statements
     }
 
     private fun expression(): Expr = equality()
+
+    private fun statement(): Stmt {
+        return when {
+            match(TokenType.PRINT) -> printStatement()
+            else -> expressionStatement()
+        }
+    }
+
+    private fun printStatement(): Stmt {
+        val value = expression()
+        consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Print(value)
+    }
+
+    private fun expressionStatement(): Stmt {
+        val expr = expression()
+        consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return ExprStmt(expr)
+    }
 
     private fun equality(): Expr {
         var expr = comparison()
