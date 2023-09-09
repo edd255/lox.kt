@@ -29,19 +29,15 @@ class Parser(private val tokens: List<Token>) {
         }
     }
 
-    private fun expression(): Expr {
-        return equality()
-    }
+    private fun expression(): Expr = equality()
 
     private fun equality(): Expr {
         var expr = comparison()
-
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
             val operator = previous()
             val right = comparison()
             expr = Binary(expr, operator, right)
         }
-
         return expr
     }
 
@@ -65,51 +61,39 @@ class Parser(private val tokens: List<Token>) {
         return previous()
     }
 
-    private fun isAtEnd(): Boolean {
-        return peek().getType() == TokenType.EOF
-    }
+    private fun isAtEnd(): Boolean = peek().getType() == TokenType.EOF
 
-    private fun peek(): Token {
-        return tokens[current]
-    }
+    private fun peek(): Token = tokens[current]
 
-    private fun previous(): Token {
-        return tokens[current - 1]
-    }
+    private fun previous(): Token = tokens[current - 1]
 
     private fun comparison(): Expr {
         var expr = term()
-
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
             val operator = previous()
             val right = term()
             expr = Binary(expr, operator, right)
         }
-
         return expr
     }
 
     private fun term(): Expr {
         var expr = factor()
-
         while (match(TokenType.MINUS, TokenType.PLUS)) {
             val operator = previous()
             val right = factor()
             expr = Binary(expr, operator, right)
         }
-
         return expr
     }
 
     private fun factor(): Expr {
         var expr = unary()
-
         while (match(TokenType.SLASH, TokenType.STAR)) {
             val operator = previous()
             val right = unary()
             expr = Binary(expr, operator, right)
         }
-
         return expr
     }
 
@@ -119,7 +103,6 @@ class Parser(private val tokens: List<Token>) {
             val right = unary()
             return Unary(operator, right)
         }
-
         return primary()
     }
 
@@ -127,17 +110,14 @@ class Parser(private val tokens: List<Token>) {
         if (match(TokenType.FALSE)) return Literal(false)
         if (match(TokenType.TRUE)) return Literal(true)
         if (match(TokenType.NIL)) return Literal(null)
-
         if (match(TokenType.NUMBER, TokenType.STRING)) {
             return Literal(previous().getLiteral())
         }
-
         if (match(TokenType.LEFT_PAREN)) {
             val expr = expression()
             consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return Grouping(expr)
         }
-
         throw error(peek(), "Expect expression.")
     }
 
@@ -155,10 +135,8 @@ class Parser(private val tokens: List<Token>) {
 
     private fun synchronize() {
         advance()
-
         while (!isAtEnd()) {
             if (previous().getType() == TokenType.SEMICOLON) return
-
             when (peek().getType()) {
                 TokenType.CLASS,
                 TokenType.FUN,
@@ -169,10 +147,8 @@ class Parser(private val tokens: List<Token>) {
                 TokenType.PRINT,
                 TokenType.RETURN,
                 -> return
-
                 else -> {}
             }
-
             advance()
         }
     }
