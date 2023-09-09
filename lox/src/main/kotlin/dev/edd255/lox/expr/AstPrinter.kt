@@ -1,6 +1,6 @@
 package dev.edd255.lox.expr
 
-class AstPrinter : Visitor<String> {
+class AstPrinter : ExprVisitor<String> {
     fun print(expr: Expr): String = expr.accept(this)
 
     override fun visitBinaryExpr(expr: Binary): String = parenthesize(

@@ -21,6 +21,14 @@ fun main(args: Array<String>) {
             "Unary    : op: Token, right: Expr",
         ),
     )
+    generator.defineAst(
+        outputDir,
+        "Stmt",
+        listOf(
+            "Expression : expr: Expr",
+            "Print      : expr: Expr",
+        ),
+    )
 }
 
 class Generator {
@@ -56,7 +64,7 @@ class Generator {
             }
         }
         writer.println(") : $baseName() {")
-        writer.println("    override fun <T> accept(visitor: Visitor<T>): T = visitor.visit$className$baseName(this)")
+        writer.println("    override fun <T> accept(visitor: ${baseName}Visitor<T>): T = visitor.visit$className$baseName(this)")
         val parts = fieldList.split(",").map { it.trim() }
         for (part in parts) {
             val keyValue = part.split(":").map { it.trim() }
@@ -69,7 +77,7 @@ class Generator {
 
     private fun defineVisitor(writer: PrintWriter, baseName: String, types: List<String>) {
         writer.println()
-        writer.println("interface Visitor<T> {")
+        writer.println("interface ${baseName}Visitor<T> {")
         for (type in types) {
             val typeName = type.split(":")[0].trim()
             writer.println("    fun visit$typeName$baseName(${baseName.lowercase(Locale.getDefault())}: $typeName): T")
@@ -77,7 +85,7 @@ class Generator {
         writer.println("}")
     }
 
-    fun capitalizeFirstChar(input: String): String {
+    private fun capitalizeFirstChar(input: String): String {
         if (input.isEmpty()) {
             return input
         }
