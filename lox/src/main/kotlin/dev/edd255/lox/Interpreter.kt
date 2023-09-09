@@ -1,19 +1,15 @@
 package dev.edd255.lox
 
-import dev.edd255.lox.expr.Binary
-import dev.edd255.lox.expr.Expr
-import dev.edd255.lox.expr.Grouping
-import dev.edd255.lox.expr.Literal
-import dev.edd255.lox.expr.Unary
-import dev.edd255.lox.expr.ExprVisitor
+import dev.edd255.lox.expr.*
 
-class Interpreter : ExprVisitor<Any?> {
+class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     private val errorReporter = ErrorReporter()
 
-    fun interpret(expr: Expr?) {
+    fun interpret(stmts: List<Stmt>) {
         try {
-            val value = evaluate(expr)
-            println(stringify(value))
+            for (stmt in stmts) {
+                execute(stmt)
+            }
         } catch (error: RuntimeError) {
             errorReporter.runtimeError(error)
         }
@@ -131,6 +127,10 @@ class Interpreter : ExprVisitor<Any?> {
         return expr.accept(this)
     }
 
+    private fun execute(stmt: Stmt?) {
+        stmt?.accept(this)
+    }
+
     private fun isTruthy(obj: Any?): Boolean {
         if (obj == null) return false
         return when (obj) {
@@ -153,5 +153,14 @@ class Interpreter : ExprVisitor<Any?> {
             }
             else -> obj.toString()
         }
+    }
+
+    override fun visitExprStmt(stmt: ExprStmt) {
+        evaluate(stmt.getExpr())
+    }
+
+    override fun visitPrintStmt(stmt: Print) {
+        val value = evaluate(stmt.getExpr())
+        println(stringify(value))
     }
 }
