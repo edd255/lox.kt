@@ -25,4 +25,12 @@ class AstPrinter : ExprVisitor<String> {
         builder.append(")")
         return builder.toString()
     }
+
+    override fun visitVariableExpr(expr: Variable): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitAssignExpr(expr: Assign): String {
+        TODO("Not yet implemented")
+    }
 }
