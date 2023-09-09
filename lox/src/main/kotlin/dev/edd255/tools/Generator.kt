@@ -25,8 +25,8 @@ fun main(args: Array<String>) {
         outputDir,
         "Stmt",
         listOf(
-            "Expression : expr: Expr",
-            "Print      : expr: Expr",
+            "ExprStmt : expr: Expr",
+            "Print    : expr: Expr",
         ),
     )
 }
@@ -40,7 +40,7 @@ class Generator {
         writer.println("import dev.edd255.lox.Token")
         writer.println()
         writer.println("abstract class $baseName {")
-        writer.println("    abstract fun <T> accept(visitor: Visitor<T>): T")
+        writer.println("    abstract fun <T> accept(visitor: ${baseName}Visitor<T>): T")
         writer.println("}")
         for (type in types) {
             val className = type.split(":")[0].trim()
@@ -64,7 +64,11 @@ class Generator {
             }
         }
         writer.println(") : $baseName() {")
-        writer.println("    override fun <T> accept(visitor: ${baseName}Visitor<T>): T = visitor.visit$className$baseName(this)")
+        if (className == "ExprStmt") {
+            writer.println("    override fun <T> accept(visitor: ${baseName}Visitor<T>): T = visitor.visit$className(this)")
+        } else {
+            writer.println("    override fun <T> accept(visitor: ${baseName}Visitor<T>): T = visitor.visit$className$baseName(this)")
+        }
         val parts = fieldList.split(",").map { it.trim() }
         for (part in parts) {
             val keyValue = part.split(":").map { it.trim() }
@@ -80,7 +84,11 @@ class Generator {
         writer.println("interface ${baseName}Visitor<T> {")
         for (type in types) {
             val typeName = type.split(":")[0].trim()
-            writer.println("    fun visit$typeName$baseName(${baseName.lowercase(Locale.getDefault())}: $typeName): T")
+            if (typeName == "ExprStmt") {
+                writer.println("    fun visit$typeName(${baseName.lowercase(Locale.getDefault())}: $typeName): T")
+            } else {
+                writer.println("    fun visit$typeName$baseName(${baseName.lowercase(Locale.getDefault())}: $typeName): T")
+            }
         }
         writer.println("}")
     }
