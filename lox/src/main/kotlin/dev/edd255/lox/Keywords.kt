@@ -9,7 +9,7 @@ class Keywords {
         keywords["else"] = TokenType.ELSE
         keywords["false"] = TokenType.FALSE
         keywords["for"] = TokenType.FOR
-        keywords["fun"] = TokenType.FUN
+        keywords["fn"] = TokenType.FN
         keywords["if"] = TokenType.IF
         keywords["nil"] = TokenType.NIL
         keywords["or"] = TokenType.OR
