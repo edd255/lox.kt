@@ -40,11 +40,9 @@ class Scanner(private val source: String) {
                     addToken(TokenType.SLASH)
                 }
             }
-
             ' ', '\r', '\t' -> {
                 // Ignore whitespace.
             }
-
             '\n' -> line++
             '"' -> string()
             'o' -> {
@@ -54,7 +52,6 @@ class Scanner(private val source: String) {
                     identifier()
                 }
             }
-
             else -> {
                 if (c.isDigit()) {
                     number()
