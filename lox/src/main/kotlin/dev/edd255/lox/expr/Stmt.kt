@@ -3,11 +3,11 @@ package dev.edd255.lox.expr
 import dev.edd255.lox.Token
 
 abstract class Stmt {
-    abstract fun <T> accept(visitor: Visitor<T>): T
+    abstract fun <T> accept(visitor: StmtVisitor<T>): T
 }
 
-class Expression(private val expr: Expr) : Stmt() {
-    override fun <T> accept(visitor: StmtVisitor<T>): T = visitor.visitExpressionStmt(this)
+class ExprStmt(private val expr: Expr) : Stmt() {
+    override fun <T> accept(visitor: StmtVisitor<T>): T = visitor.visitExprStmt(this)
     fun getExpr(): Expr = expr
 }
 
@@ -17,6 +17,6 @@ class Print(private val expr: Expr) : Stmt() {
 }
 
 interface StmtVisitor<T> {
-    fun visitExpressionStmt(stmt: Expression): T
+    fun visitExprStmt(stmt: ExprStmt): T
     fun visitPrintStmt(stmt: Print): T
 }
