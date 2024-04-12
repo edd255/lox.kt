@@ -54,8 +54,6 @@ class Lox {
         if (errorReporter.getHadError()) {
             return
         }
-        if (stmts != null) {
-            interpreter.interpret(stmts)
-        }
+        interpreter.interpret(stmts)
     }
 }
