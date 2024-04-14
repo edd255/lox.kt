@@ -2,7 +2,6 @@ package dev.edd255.lox
 
 class Parser(private val tokens: List<Token>) {
     private var current: Int = 0
-    private var errorReporter = ErrorReporter()
 
     companion object {
         class ParseError : RuntimeException()
@@ -299,7 +298,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun error(token: Token, message: String): ParseError {
-        errorReporter.error(token, message)
+        ErrorReporter.error(token, message)
         return ParseError()
     }
 

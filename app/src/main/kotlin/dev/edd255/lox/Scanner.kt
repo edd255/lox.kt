@@ -5,7 +5,6 @@ class Scanner(private val source: String) {
     private var start: Int = 0
     private var current: Int = 0
     private var line: Int = 1
-    private val errorReporter = ErrorReporter()
     private val keywords = Keywords()
 
     fun scanTokens(): List<Token> {
@@ -58,7 +57,7 @@ class Scanner(private val source: String) {
                 } else if (char.isAlpha()) {
                     identifier()
                 } else {
-                    errorReporter.error(line, "Unexpected character.")
+                    ErrorReporter.error(line, "Unexpected character.")
                 }
             }
         }
@@ -96,7 +95,7 @@ class Scanner(private val source: String) {
             advance()
         }
         if (isAtEnd()) {
-            errorReporter.error(line, "Unterminated string.")
+            ErrorReporter.error(line, "Unterminated string.")
             return
         }
         advance()
