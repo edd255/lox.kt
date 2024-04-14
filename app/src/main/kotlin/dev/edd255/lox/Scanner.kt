@@ -85,6 +85,11 @@ class Scanner(private val source: String) {
         return source[current + 1]
     }
 
+    private fun peek(): Char {
+        if (isAtEnd()) return '\u0000'
+        return source[current]
+    }
+
     private fun string() {
         while (peek() != '"' && !isAtEnd()) {
             if (peek() == '\n') line++
@@ -97,11 +102,6 @@ class Scanner(private val source: String) {
         advance()
         val value: String = source.substring(start + 1, current - 1)
         addToken(TokenType.STRING, value)
-    }
-
-    private fun peek(): Char {
-        if (isAtEnd()) return '\u0000'
-        return source[current]
     }
 
     private fun match(c: Char): Boolean {

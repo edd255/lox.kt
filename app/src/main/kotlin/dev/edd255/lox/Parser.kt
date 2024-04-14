@@ -16,20 +16,7 @@ class Parser(private val tokens: List<Token>) {
         return statements
     }
 
-    private fun expression(): Expression = assignment()
-
-    private fun declaration(): Statement {
-        return try {
-            when {
-                match(TokenType.VAR) -> varDeclaration()
-                else -> statement()
-            }
-        } catch (error: ParseError) {
-            synchronize()
-            return Statement.ExpressionStatement(Expression.Literal(null))
-        }
-    }
-
+    //==== STATEMENTS ==================================================================================================
     private fun statement(): Statement {
         return when {
             match(TokenType.FOR) -> forStatement()
@@ -60,14 +47,6 @@ class Parser(private val tokens: List<Token>) {
         return if (initializer != null) Statement.Block(listOf(initializer, body)) else body
     }
 
-    private fun whileStatement(): Statement {
-        consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
-        val condition = expression()
-        consume(TokenType.RIGHT_PAREN, "Expect ')' after 'condition'.")
-        val body = statement()
-        return Statement.While(condition, body)
-    }
-
     private fun ifStatement(): Statement {
         consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
         val condition = expression()
@@ -86,17 +65,12 @@ class Parser(private val tokens: List<Token>) {
         return Statement.Print(value)
     }
 
-    private fun varDeclaration(): Statement {
-        val name = consume(TokenType.IDENTIFIER, "Expect variable name.")
-        val initializer = if (match(TokenType.EQUAL)) expression() else null
-        consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
-        return Statement.Variable(name, initializer)
-    }
-
-    private fun expressionStatement(): Statement {
-        val expr = expression()
-        consume(TokenType.SEMICOLON, "Expect ';' after expression.")
-        return Statement.ExpressionStatement(expr)
+    private fun whileStatement(): Statement {
+        consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
+        val condition = expression()
+        consume(TokenType.RIGHT_PAREN, "Expect ')' after 'condition'.")
+        val body = statement()
+        return Statement.While(condition, body)
     }
 
     private fun block(): List<Statement> {
@@ -108,104 +82,106 @@ class Parser(private val tokens: List<Token>) {
         return statements
     }
 
+    private fun declaration(): Statement {
+        return try {
+            when {
+                match(TokenType.VAR) -> varDeclaration()
+                else -> statement()
+            }
+        } catch (error: ParseError) {
+            synchronize()
+            return Statement.ExpressionStatement(Expression.Literal(null))
+        }
+    }
+
+    private fun varDeclaration(): Statement {
+        val name = consume(TokenType.IDENTIFIER, "Expect variable name.")
+        val initializer = if (match(TokenType.EQUAL)) expression() else null
+        consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
+        return Statement.Variable(name, initializer)
+    }
+
+    private fun expressionStatement(): Statement {
+        val expression = expression()
+        consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return Statement.ExpressionStatement(expression)
+    }
+
+    //==== EXPRESSIONS =================================================================================================
+    private fun expression(): Expression = assignment()
+
     private fun assignment(): Expression {
-        val expr = or()
+        val expression = or()
         if (match(TokenType.EQUAL)) {
             val equals = previous()
             val value = assignment()
-            if (expr is Expression.Variable) {
-                val name = expr.name
+            if (expression is Expression.Variable) {
+                val name = expression.name
                 return Expression.Assign(name, value)
             }
             error(equals, "Invalid assignment target.")
         }
-        return expr
+        return expression
     }
 
     private fun or(): Expression {
-        var expr = and()
+        var expression = and()
         while (match(TokenType.OR)) {
             val operator = previous()
             val right = and()
-            expr = Expression.Logical(expr, operator, right)
+            expression = Expression.Logical(expression, operator, right)
         }
-        return expr
+        return expression
     }
 
     private fun and(): Expression {
-        var expr = equality()
+        var expression = equality()
         while (match(TokenType.AND)) {
             val operator = previous()
             val right = equality()
-            expr = Expression.Logical(expr, operator, right)
+            expression = Expression.Logical(expression, operator, right)
         }
-        return expr
+        return expression
     }
 
     private fun equality(): Expression {
-        var expr = comparison()
+        var expression = comparison()
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
             val operator = previous()
             val right = comparison()
-            expr = Expression.Binary(expr, operator, right)
+            expression = Expression.Binary(expression, operator, right)
         }
-        return expr
+        return expression
     }
-
-    private fun match(vararg types: TokenType): Boolean {
-        for (type in types) {
-            if (check(type)) {
-                advance()
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun check(type: TokenType): Boolean {
-        if (isAtEnd()) return false
-        return peek().type == type
-    }
-
-    private fun advance(): Token {
-        if (!isAtEnd()) current++
-        return previous()
-    }
-
-    private fun isAtEnd(): Boolean = peek().type == TokenType.EOF
-
-    private fun peek(): Token = tokens[current]
-
-    private fun previous(): Token = tokens[current - 1]
 
     private fun comparison(): Expression {
-        var expr = term()
+        var expression = term()
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
             val operator = previous()
             val right = term()
-            expr = Expression.Binary(expr, operator, right)
+            expression = Expression.Binary(expression, operator, right)
         }
-        return expr
+        return expression
     }
 
     private fun term(): Expression {
-        var expr = factor()
+        var expression = factor()
         while (match(TokenType.MINUS, TokenType.PLUS)) {
             val operator = previous()
             val right = factor()
-            expr = Expression.Binary(expr, operator, right)
+            expression = Expression.Binary(expression, operator, right)
         }
-        return expr
+        return expression
     }
 
     private fun factor(): Expression {
-        var expr = unary()
+        var expression = unary()
         while (match(TokenType.SLASH, TokenType.STAR)) {
             val operator = previous()
             val right = unary()
-            expr = Expression.Binary(expr, operator, right)
+            expression = Expression.Binary(expression, operator, right)
         }
-        return expr
+        return expression
     }
 
     private fun unary(): Expression {
@@ -228,12 +204,39 @@ class Parser(private val tokens: List<Token>) {
             return Expression.Variable(previous())
         }
         if (match(TokenType.LEFT_PAREN)) {
-            val expr = expression()
+            val expression = expression()
             consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
-            return Expression.Grouping(expr)
+            return Expression.Grouping(expression)
         }
         throw error(peek(), "Expect expression.")
     }
+
+    //==== UTILITIES ===================================================================================================
+    private fun match(vararg types: TokenType): Boolean {
+        for (type in types) {
+            if (check(type)) {
+                advance()
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun check(type: TokenType): Boolean {
+        if (isAtEnd()) return false
+        return peek().type == type
+    }
+
+    private fun isAtEnd(): Boolean = peek().type == TokenType.EOF
+
+    private fun advance(): Token {
+        if (!isAtEnd()) current++
+        return previous()
+    }
+
+    private fun peek(): Token = tokens[current]
+
+    private fun previous(): Token = tokens[current - 1]
 
     private fun consume(type: TokenType, message: String): Token {
         if (check(type)) {
