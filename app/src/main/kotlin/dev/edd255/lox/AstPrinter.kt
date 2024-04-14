@@ -17,6 +17,10 @@ class AstPrinter : Expression.Visitor<String> {
 
     override fun visitUnaryExpression(expression: Expression.Unary): String = parenthesize(expression.operator.lexeme, expression.right)
 
+    override fun visitVariableExpression(expression: Expression.Variable): String = parenthesize("var '${expression.name.lexeme}'")
+
+    override fun visitAssignExpression(expression: Expression.Assign): String = parenthesize("assign '${expression.name.lexeme}'", expression.value)
+
     private fun parenthesize(name: String, vararg expressions: Expression): String {
         val builder = StringBuilder()
         builder.append("(").append(name)
@@ -27,8 +31,4 @@ class AstPrinter : Expression.Visitor<String> {
         builder.append(")")
         return builder.toString()
     }
-
-    override fun visitVariableExpression(expression: Expression.Variable): String = parenthesize("var '${expression.name.lexeme}'")
-
-    override fun visitAssignExpression(expression: Expression.Assign): String = parenthesize("assign '${expression.name.lexeme}'", expression.value)
 }

@@ -14,6 +14,13 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         }
     }
 
+    //==== VISIT EXPRESSIONS ===========================================================================================
+    private fun evaluate(expression: Expression?): Any? {
+        assert(expression != null)
+        if (expression == null) return null
+        return expression.accept(this)
+    }
+
     override fun visitAssignExpression(expression: Expression.Assign): Any? {
         val value = evaluate(expression.value)
         value?.let { environment.assign(expression.name, it) }
@@ -130,12 +137,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         return environment.get(expression.name)
     }
 
-    private fun evaluate(expression: Expression?): Any? {
-        assert(expression != null)
-        if (expression == null) return null
-        return expression.accept(this)
-    }
-
+    //==== VISIT STATEMENTS ============================================================================================
     private fun execute(statement: Statement?) {
         statement?.accept(this)
     }
@@ -149,30 +151,6 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
             }
         } finally {
             this.environment = previous
-        }
-    }
-
-    private fun isTruthy(obj: Any?): Boolean {
-        if (obj == null) return false
-        return when (obj) {
-            is Boolean -> obj
-            else -> false
-        }
-    }
-
-    private fun isEqual(a: Any?, b: Any?): Boolean = a == b
-
-    private fun stringify(obj: Any?): String {
-        if (obj == null) return "nil"
-        return when (obj) {
-            is Double -> {
-                var text = obj.toString()
-                if (text.endsWith(".0")) {
-                    text = text.substring(0, text.length - 2)
-                }
-                text
-            }
-            else -> obj.toString()
         }
     }
 
@@ -219,6 +197,31 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     override fun visitWhileStatement(statement: Statement.While) {
         while (isTruthy(evaluate(statement.condition))) {
             execute(statement.body)
+        }
+    }
+
+    //==== UTILITIES ===================================================================================================
+    private fun isTruthy(obj: Any?): Boolean {
+        if (obj == null) return false
+        return when (obj) {
+            is Boolean -> obj
+            else -> false
+        }
+    }
+
+    private fun isEqual(a: Any?, b: Any?): Boolean = a == b
+
+    private fun stringify(obj: Any?): String {
+        if (obj == null) return "nil"
+        return when (obj) {
+            is Double -> {
+                var text = obj.toString()
+                if (text.endsWith(".0")) {
+                    text = text.substring(0, text.length - 2)
+                }
+                text
+            }
+            else -> obj.toString()
         }
     }
 }
