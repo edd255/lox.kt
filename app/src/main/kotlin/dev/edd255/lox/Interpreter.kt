@@ -121,7 +121,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         val right = evaluate(expr.right)
         return when (expr.op.type) {
             TokenType.MINUS -> {
-                if (right is Double) -1 * right else null
+                if (right is Double) -right else null
             }
             TokenType.BANG -> !isTruthy(right)
             else -> null
