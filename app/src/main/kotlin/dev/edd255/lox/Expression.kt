@@ -11,6 +11,10 @@ abstract class Expression {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitBinaryExpression(this)
     }
 
+    class Call(val callee: Expression, val paren: Token, val arguments: List<Expression>) : Expression() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visitCallExpression(this)
+    }
+
     class Grouping(val expression: Expression) : Expression() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitGroupingExpression(this)
     }
@@ -32,12 +36,13 @@ abstract class Expression {
     }
 
     interface Visitor<T> {
-        fun visitAssignExpression(expression: Assign): T
-        fun visitBinaryExpression(expression: Binary): T
-        fun visitGroupingExpression(expression: Grouping): T
-        fun visitLiteralExpression(expression: Literal): T
-        fun visitLogicalExpression(expression: Logical): T
-        fun visitUnaryExpression(expression: Unary): T
-        fun visitVariableExpression(expression: Variable): T
+        fun visitAssignExpression(assign: Assign): T
+        fun visitBinaryExpression(binary: Binary): T
+        fun visitCallExpression(call: Call): T
+        fun visitGroupingExpression(grouping: Grouping): T
+        fun visitLiteralExpression(literal: Literal): T
+        fun visitLogicalExpression(logical: Logical): T
+        fun visitUnaryExpression(unary: Unary): T
+        fun visitVariableExpression(variable: Variable): T
     }
 }

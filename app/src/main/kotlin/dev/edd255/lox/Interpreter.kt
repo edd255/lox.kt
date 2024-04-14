@@ -2,7 +2,23 @@ package dev.edd255.lox
 
 class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     private val errorReporter = ErrorReporter()
-    private var environment = Environment()
+    val globals = Environment()
+    private var environment = globals
+
+    init {
+        globals.define(
+            "clock",
+            object : LoxCallable {
+                override fun arity(): Int = 0
+
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+                    return System.currentTimeMillis() / 1000.0
+                }
+
+                override fun toString(): String = "<native fn>"
+            }
+        )
+    }
 
     fun interpret(statements: List<Statement>) {
         try {
@@ -21,22 +37,22 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         return expression.accept(this)
     }
 
-    override fun visitAssignExpression(expression: Expression.Assign): Any? {
-        val value = evaluate(expression.value)
-        value?.let { environment.assign(expression.name, it) }
+    override fun visitAssignExpression(assign: Expression.Assign): Any? {
+        val value = evaluate(assign.value)
+        value?.let { environment.assign(assign.name, it) }
         return value
     }
 
-    override fun visitBinaryExpression(expression: Expression.Binary): Any? {
-        val left = evaluate(expression.left)
-        val right = evaluate(expression.right)
-        return when (expression.operator.type) {
+    override fun visitBinaryExpression(binary: Expression.Binary): Any? {
+        val left = evaluate(binary.left)
+        val right = evaluate(binary.right)
+        return when (binary.operator.type) {
             TokenType.MINUS -> {
                 if (left is Double && right is Double) {
                     left - right
                 } else {
                     throw RuntimeError(
-                        expression.operator,
+                        binary.operator,
                         "Operand must be a number",
                     )
                 }
@@ -46,7 +62,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                     left / right
                 } else {
                     throw RuntimeError(
-                        expression.operator,
+                        binary.operator,
                         "Operand must be a number",
                     )
                 }
@@ -56,7 +72,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                     left * right
                 } else {
                     throw RuntimeError(
-                        expression.operator,
+                        binary.operator,
                         "Operand must be a number",
                     )
                 }
@@ -67,7 +83,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                 } else if (left is String && right is String) {
                     left + right
                 } else {
-                    throw RuntimeError(expression.operator, "Operands must be either numbers or strings")
+                    throw RuntimeError(binary.operator, "Operands must be either numbers or strings")
                 }
             }
             TokenType.GREATER -> {
@@ -75,7 +91,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                     left > right
                 } else {
                     throw RuntimeError(
-                        expression.operator,
+                        binary.operator,
                         "Operand must be a number",
                     )
                 }
@@ -85,7 +101,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                     left >= right
                 } else {
                     throw RuntimeError(
-                        expression.operator,
+                        binary.operator,
                         "Operand must be a number",
                     )
                 }
@@ -95,7 +111,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                     left < right
                 } else {
                     throw RuntimeError(
-                        expression.operator,
+                        binary.operator,
                         "Operand must be a number",
                     )
                 }
@@ -105,7 +121,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                     left <= right
                 } else {
                     throw RuntimeError(
-                        expression.operator,
+                        binary.operator,
                         "Operand must be a number",
                     )
                 }
@@ -118,13 +134,13 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         }
     }
 
-    override fun visitGroupingExpression(expression: Expression.Grouping): Any? = evaluate(expression.expression)
+    override fun visitGroupingExpression(grouping: Expression.Grouping): Any? = evaluate(grouping.expression)
 
-    override fun visitLiteralExpression(expression: Expression.Literal): Any? = expression.value
+    override fun visitLiteralExpression(literal: Expression.Literal): Any? = literal.value
 
-    override fun visitUnaryExpression(expression: Expression.Unary): Any? {
-        val right = evaluate(expression.right)
-        return when (expression.operator.type) {
+    override fun visitUnaryExpression(unary: Expression.Unary): Any? {
+        val right = evaluate(unary.right)
+        return when (unary.operator.type) {
             TokenType.MINUS -> {
                 if (right is Double) -right else null
             }
@@ -133,8 +149,23 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         }
     }
 
-    override fun visitVariableExpression(expression: Expression.Variable): Any? {
-        return environment.get(expression.name)
+    override fun visitVariableExpression(variable: Expression.Variable): Any? {
+        return environment.get(variable.name)
+    }
+
+    override fun visitCallExpression(call: Expression.Call): Any? {
+        val callee = evaluate(call.callee)
+        if (callee !is LoxCallable) {
+            throw RuntimeError(call.paren, "Can only call functions and classes")
+        }
+        val arguments = mutableListOf<Any?>();
+        for (argument in call.arguments) {
+            arguments.add(evaluate(argument))
+        }
+        if (arguments.size != callee.arity()) {
+            throw RuntimeError(call.paren, "Expected ${callee.arity()} arguments but got ${arguments.size}")
+        }
+        return callee.call(this, arguments)
     }
 
     //==== VISIT STATEMENTS ============================================================================================
@@ -142,7 +173,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         statement?.accept(this)
     }
 
-    private fun executeBlock(statements: List<Statement>, environment: Environment) {
+    fun executeBlock(statements: List<Statement>, environment: Environment) {
         val previous = this.environment
         try {
             this.environment = environment
@@ -154,35 +185,44 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         }
     }
 
-    override fun visitBlockStatement(statement: Statement.Block) {
-        executeBlock(statement.statements, Environment(environment))
+    override fun visitBlockStatement(block: Statement.Block) {
+        executeBlock(block.statements, Environment(environment))
     }
 
-    override fun visitExpressionStatement(statement: Statement.ExpressionStatement) {
-        evaluate(statement.expression)
+    override fun visitExpressionStatement(expressionStatement: Statement.ExpressionStatement) {
+        evaluate(expressionStatement.expression)
     }
 
-    override fun visitPrintStatement(statement: Statement.Print) {
-        val value = evaluate(statement.expression)
+    override fun visitFunctionStatement(function: Statement.Function) {
+        val loxFunction = LoxFunction(function, environment)
+        environment.define(function.name.lexeme, loxFunction)
+    }
+
+    override fun visitPrintStatement(print: Statement.Print) {
+        val value = evaluate(print.expression)
         println(stringify(value))
     }
 
-    override fun visitVarStatement(statement: Statement.Variable) {
-        val value = evaluate(statement.initializer)
-        value?.let { environment.define(statement.name.lexeme, it) }
+    override fun visitReturnStatement(returnStatement: Statement.Return) {
+        throw Return(if (returnStatement.value != null) evaluate(returnStatement.value) else null)
     }
 
-    override fun visitIfStatement(statement: Statement.If) {
-        if (isTruthy(evaluate(statement.condition))) {
-            execute(statement.thenBranch)
+    override fun visitVariableStatement(variable: Statement.Variable) {
+        val value = evaluate(variable.initializer)
+        value?.let { environment.define(variable.name.lexeme, it) }
+    }
+
+    override fun visitIfStatement(ifQuery: Statement.If) {
+        if (isTruthy(evaluate(ifQuery.condition))) {
+            execute(ifQuery.thenBranch)
         } else {
-            execute(statement.elseBranch)
+            execute(ifQuery.elseBranch)
         }
     }
 
-    override fun visitLogicalExpression(expression: Expression.Logical): Any? {
-        val left = evaluate(expression.left)
-        if (expression.operator.type == TokenType.OR) {
+    override fun visitLogicalExpression(logical: Expression.Logical): Any? {
+        val left = evaluate(logical.left)
+        if (logical.operator.type == TokenType.OR) {
             if (isTruthy(left)) {
                 return left
             }
@@ -191,12 +231,12 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                 return left
             }
         }
-        return evaluate(expression.right)
+        return evaluate(logical.right)
     }
 
-    override fun visitWhileStatement(statement: Statement.While) {
-        while (isTruthy(evaluate(statement.condition))) {
-            execute(statement.body)
+    override fun visitWhileStatement(whileLoop: Statement.While) {
+        while (isTruthy(evaluate(whileLoop.condition))) {
+            execute(whileLoop.body)
         }
     }
 
