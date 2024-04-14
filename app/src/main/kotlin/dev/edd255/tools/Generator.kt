@@ -19,6 +19,7 @@ fun main(args: Array<String>) {
             "Binary   : left: Expr, op: Token, right: Expr",
             "Grouping : expr: Expr",
             "Literal  : value: Any?",
+            "Logical  : left: Expr, operator: Token, right: Expr",
             "Unary    : op: Token, right: Expr",
             "Variable : name: Token",
         ),
@@ -29,8 +30,10 @@ fun main(args: Array<String>) {
         listOf(
             "Block    : stmts: List<Stmt>",
             "ExprStmt : expr: Expr",
+            "If       : condition: Expr, thenBranch: Stmt, elseBranch: Stmt?",
             "Print    : expr: Expr",
             "Var      : name: Token, initializer: Expr?",
+            "While    : condition: Expr, body: Stmt"
         ),
     )
 }
@@ -62,9 +65,9 @@ class Generator {
         while (fields.hasNext()) {
             val field = fields.next()
             if (fields.hasNext()) {
-                writer.print("private val $field, ")
+                writer.print("val $field, ")
             } else {
-                writer.print("private val $field")
+                writer.print("val $field")
             }
         }
         writer.println(") : $baseName() {")
@@ -72,13 +75,6 @@ class Generator {
             writer.println("    override fun <T> accept(visitor: ${baseName}Visitor<T>): T = visitor.visit$className(this)")
         } else {
             writer.println("    override fun <T> accept(visitor: ${baseName}Visitor<T>): T = visitor.visit$className$baseName(this)")
-        }
-        val parts = fieldList.split(",").map { it.trim() }
-        for (part in parts) {
-            val keyValue = part.split(":").map { it.trim() }
-            val name = keyValue[0]
-            val type = keyValue[1]
-            writer.println("    fun get${capitalizeFirstChar(name)}(): $type = $name")
         }
         writer.println("}")
     }

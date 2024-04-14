@@ -4,16 +4,18 @@ class AstPrinter : ExprVisitor<String> {
     fun print(expr: Expr): String = expr.accept(this)
 
     override fun visitBinaryExpr(expr: Binary): String = parenthesize(
-        expr.getOp().getLexeme(),
-        expr.getLeft(),
-        expr.getRight(),
+        expr.op.lexeme,
+        expr.left,
+        expr.right,
     )
 
-    override fun visitGroupingExpr(expr: Grouping): String = parenthesize("group", expr.getExpr())
+    override fun visitGroupingExpr(expr: Grouping): String = parenthesize("group", expr.expr)
 
-    override fun visitLiteralExpr(expr: Literal): String = expr.getValue().toString()
+    override fun visitLiteralExpr(expr: Literal): String = expr.value.toString()
 
-    override fun visitUnaryExpr(expr: Unary): String = parenthesize(expr.getOp().getLexeme(), expr.getRight())
+    override fun visitLogicalExpr(expr: Logical): String = parenthesize(expr.operator.lexeme, expr.left, expr.right)
+
+    override fun visitUnaryExpr(expr: Unary): String = parenthesize(expr.op.lexeme, expr.right)
 
     private fun parenthesize(name: String, vararg exprs: Expr): String {
         val builder = StringBuilder()
@@ -26,11 +28,7 @@ class AstPrinter : ExprVisitor<String> {
         return builder.toString()
     }
 
-    override fun visitVariableExpr(expr: Variable): String {
-        TODO("Not yet implemented")
-    }
+    override fun visitVariableExpr(expr: Variable): String = parenthesize("var '${expr.name.lexeme}'")
 
-    override fun visitAssignExpr(expr: Assign): String {
-        TODO("Not yet implemented")
-    }
+    override fun visitAssignExpr(expr: Assign): String = parenthesize("assign '${expr.name.lexeme}'", expr.value)
 }

@@ -5,10 +5,10 @@ class ErrorReporter {
     private var hadRuntimeError: Boolean = false
 
     fun error(token: Token, message: String) {
-        if (token.getType() == TokenType.EOF) {
-            report(token.getLine(), "at end", message)
+        if (token.type == TokenType.EOF) {
+            report(token.line, "at end", message)
         } else {
-            report(token.getLine(), "at '$token.lexeme'", message)
+            report(token.line, "at '$token.lexeme'", message)
         }
     }
 
@@ -20,7 +20,7 @@ class ErrorReporter {
     }
 
     fun runtimeError(error: RuntimeError) {
-        println("${error.message}\n[line ${error.token.getLine()}]")
+        println("${error.message}\n[line ${error.token.line}]")
         hadRuntimeError = true
     }
 

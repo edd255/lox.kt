@@ -6,30 +6,35 @@ abstract class Stmt {
     abstract fun <T> accept(visitor: StmtVisitor<T>): T
 }
 
-class Block(private val stmts: List<Stmt>) : Stmt() {
+class Block(val stmts: List<Stmt>) : Stmt() {
     override fun <T> accept(visitor: StmtVisitor<T>): T = visitor.visitBlockStmt(this)
-    fun getStmts(): List<Stmt> = stmts
 }
 
-class ExprStmt(private val expr: Expr) : Stmt() {
+class ExprStmt(val expr: Expr) : Stmt() {
     override fun <T> accept(visitor: StmtVisitor<T>): T = visitor.visitExprStmt(this)
-    fun getExpr(): Expr = expr
 }
 
-class Print(private val expr: Expr) : Stmt() {
+class If(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?) : Stmt() {
+    override fun <T> accept(visitor: StmtVisitor<T>): T = visitor.visitIfStmt(this)
+}
+
+class Print(val expr: Expr) : Stmt() {
     override fun <T> accept(visitor: StmtVisitor<T>): T = visitor.visitPrintStmt(this)
-    fun getExpr(): Expr = expr
 }
 
-class Var(private val name: Token, private val initializer: Expr?) : Stmt() {
+class Var(val name: Token, val initializer: Expr?) : Stmt() {
     override fun <T> accept(visitor: StmtVisitor<T>): T = visitor.visitVarStmt(this)
-    fun getName(): Token = name
-    fun getInitializer(): Expr? = initializer
+}
+
+class While(val condition: Expr, val body: Stmt) : Stmt() {
+    override fun <T> accept(visitor: StmtVisitor<T>): T = visitor.visitWhileStmt(this)
 }
 
 interface StmtVisitor<T> {
     fun visitBlockStmt(stmt: Block): T
     fun visitExprStmt(stmt: ExprStmt): T
+    fun visitIfStmt(stmt: If): T
     fun visitPrintStmt(stmt: Print): T
     fun visitVarStmt(stmt: Var): T
+    fun visitWhileStmt(stmt: While): T
 }
