@@ -11,6 +11,10 @@ abstract class Statement {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitExpressionStatement(this)
     }
 
+    class Function(val name: Token, val parameters: List<Token>, val body: List<Statement>) : Statement() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visitFunctionStatement(this)
+    }
+
     class If(val condition: Expression, val thenBranch: Statement, val elseBranch: Statement?) : Statement() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitIfStatement(this)
     }
@@ -19,8 +23,12 @@ abstract class Statement {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitPrintStatement(this)
     }
 
+    class Return(val keyword: Token, val value: Expression?) : Statement() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visitReturnStatement(this)
+    }
+
     class Variable(val name: Token, val initializer: Expression?) : Statement() {
-        override fun <T> accept(visitor: Visitor<T>): T = visitor.visitVarStatement(this)
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visitVariableStatement(this)
     }
 
     class While(val condition: Expression, val body: Statement) : Statement() {
@@ -28,11 +36,13 @@ abstract class Statement {
     }
 
     interface Visitor<T> {
-        fun visitBlockStatement(statement: Block): T
-        fun visitExpressionStatement(statement: ExpressionStatement): T
-        fun visitIfStatement(statement: If): T
-        fun visitPrintStatement(statement: Print): T
-        fun visitVarStatement(statement: Variable): T
-        fun visitWhileStatement(statement: While): T
+        fun visitBlockStatement(block: Block): T
+        fun visitExpressionStatement(expressionStatement: ExpressionStatement): T
+        fun visitFunctionStatement(function: Function): T
+        fun visitIfStatement(ifQuery: If): T
+        fun visitPrintStatement(print: Print): T
+        fun visitReturnStatement(returnStatement: Return): T
+        fun visitVariableStatement(variable: Variable): T
+        fun visitWhileStatement(whileLoop: While): T
     }
 }

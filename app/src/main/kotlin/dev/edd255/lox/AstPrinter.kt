@@ -3,23 +3,25 @@ package dev.edd255.lox
 class AstPrinter : Expression.Visitor<String> {
     fun print(expression: Expression): String = expression.accept(this)
 
-    override fun visitBinaryExpression(expression: Expression.Binary): String = parenthesize(
-        expression.operator.lexeme,
-        expression.left,
-        expression.right,
+    override fun visitBinaryExpression(binary: Expression.Binary): String = parenthesize(
+        binary.operator.lexeme,
+        binary.left,
+        binary.right,
     )
 
-    override fun visitGroupingExpression(expression: Expression.Grouping): String = parenthesize("group", expression.expression)
+    override fun visitCallExpression(call: Expression.Call): String = parenthesize("call", call.callee, *call.arguments.toTypedArray())
 
-    override fun visitLiteralExpression(expression: Expression.Literal): String = expression.value.toString()
+    override fun visitGroupingExpression(grouping: Expression.Grouping): String = parenthesize("group", grouping.expression)
 
-    override fun visitLogicalExpression(expression: Expression.Logical): String = parenthesize(expression.operator.lexeme, expression.left, expression.right)
+    override fun visitLiteralExpression(literal: Expression.Literal): String = literal.value.toString()
 
-    override fun visitUnaryExpression(expression: Expression.Unary): String = parenthesize(expression.operator.lexeme, expression.right)
+    override fun visitLogicalExpression(logical: Expression.Logical): String = parenthesize(logical.operator.lexeme, logical.left, logical.right)
 
-    override fun visitVariableExpression(expression: Expression.Variable): String = parenthesize("var '${expression.name.lexeme}'")
+    override fun visitUnaryExpression(unary: Expression.Unary): String = parenthesize(unary.operator.lexeme, unary.right)
 
-    override fun visitAssignExpression(expression: Expression.Assign): String = parenthesize("assign '${expression.name.lexeme}'", expression.value)
+    override fun visitVariableExpression(variable: Expression.Variable): String = parenthesize("var '${variable.name.lexeme}'")
+
+    override fun visitAssignExpression(assign: Expression.Assign): String = parenthesize("assign '${assign.name.lexeme}'", assign.value)
 
     private fun parenthesize(name: String, vararg expressions: Expression): String {
         val builder = StringBuilder()
