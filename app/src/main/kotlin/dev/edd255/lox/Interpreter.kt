@@ -1,8 +1,8 @@
 package dev.edd255.lox
 
 class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
-    private val errorReporter = ErrorReporter()
-    val globals = Environment()
+    private val globals = Environment()
+    private val locals = hashMapOf<Expression, Int>()
     private var environment = globals
 
     init {
@@ -11,7 +11,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
             object : LoxCallable {
                 override fun arity(): Int = 0
 
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
                     return System.currentTimeMillis() / 1000.0
                 }
 
@@ -26,7 +26,19 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                 execute(stmt)
             }
         } catch (error: RuntimeError) {
-            errorReporter.runtimeError(error)
+            ErrorReporter.runtimeError(error)
+        }
+    }
+
+    //==== RESOLVING ===================================================================================================
+    fun resolve(expression: Expression, depth: Int) = locals.put(expression, depth)
+
+    private fun lookUpVariable(name: Token, expression: Expression): Any? {
+        val distance = locals[expression]
+        return if (distance != null) {
+            environment.getAt(distance, name.lexeme)
+        } else {
+            globals.get(name)
         }
     }
 
@@ -39,7 +51,12 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
 
     override fun visitAssignExpression(assign: Expression.Assign): Any? {
         val value = evaluate(assign.value)
-        value?.let { environment.assign(assign.name, it) }
+        val distance = locals[assign]
+        if (distance != null) {
+            environment.assignAt(distance, assign.name, value)
+        } else {
+            globals.assign(assign.name, value)
+        }
         return value
     }
 
@@ -150,7 +167,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     }
 
     override fun visitVariableExpression(variable: Expression.Variable): Any? {
-        return environment.get(variable.name)
+        return lookUpVariable(variable.name, variable)
     }
 
     override fun visitCallExpression(call: Expression.Call): Any? {
@@ -158,7 +175,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         if (callee !is LoxCallable) {
             throw RuntimeError(call.paren, "Can only call functions and classes")
         }
-        val arguments = mutableListOf<Any?>();
+        val arguments = mutableListOf<Any?>()
         for (argument in call.arguments) {
             arguments.add(evaluate(argument))
         }

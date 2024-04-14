@@ -1,6 +1,6 @@
 package dev.edd255.lox
 
-class ErrorReporter {
+object ErrorReporter {
     var hadError: Boolean = false
     var hadRuntimeError: Boolean = false
 

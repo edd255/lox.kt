@@ -8,16 +8,15 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 class Lox {
-    private val errorReporter = ErrorReporter()
     private val interpreter = Interpreter()
 
     fun runFile(path: String) {
         val bytes: ByteArray = Files.readAllBytes(Paths.get(path))
         run(String(bytes, Charset.defaultCharset()))
-        if (errorReporter.hadError) {
+        if (ErrorReporter.hadError) {
             exitProcess(65)
         }
-        if (errorReporter.hadRuntimeError) {
+        if (ErrorReporter.hadRuntimeError) {
             exitProcess(70)
         }
     }
@@ -42,18 +41,21 @@ class Lox {
             print(">>> ")
             val line = reader.readLine() ?: break
             run(line)
-            errorReporter.hadError = false
+            ErrorReporter.hadError = false
         }
     }
 
     private fun run(source: String) {
         val scanner = Scanner(source)
         val tokens: List<Token> = scanner.scanTokens()
+        if (ErrorReporter.hadError) return
         val parser = Parser(tokens)
+        if (ErrorReporter.hadError) return
         val statements = parser.parse()
-        if (errorReporter.hadError) {
-            return
-        }
+        if (ErrorReporter.hadError) return
+        val resolver = Resolver(interpreter)
+        resolver.resolve(statements)
+        if (ErrorReporter.hadError) return
         interpreter.interpret(statements)
     }
 }
