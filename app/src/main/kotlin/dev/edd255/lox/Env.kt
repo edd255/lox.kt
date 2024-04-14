@@ -10,7 +10,7 @@ class Env(private val enclosing: Env? = null) {
             return values[name.lexeme]
         }
         if (enclosing != null) { return enclosing.get(name) }
-        throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
+        throw RuntimeError(name, "Tried to access undefined variable '${name.lexeme}'.")
     }
 
     fun define(name: String, value: Any) {
@@ -18,11 +18,16 @@ class Env(private val enclosing: Env? = null) {
     }
 
     fun assign(name: Token, value: Any) {
-        if (values.containsKey(name.lexeme)) {
-            values[name.lexeme] = value
-            return
+        return when {
+            values.containsKey(name.lexeme) -> {
+                values[name.lexeme] = value
+            }
+            enclosing != null -> {
+                enclosing.assign(name, value)
+            }
+            else -> {
+                throw RuntimeError(name, "Tried to assign undefined variable '${name.lexeme}'.")
+            }
         }
-        enclosing?.assign(name, value)
-        throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
     }
 }
