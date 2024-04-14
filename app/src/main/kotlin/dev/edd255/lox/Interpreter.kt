@@ -1,14 +1,12 @@
 package dev.edd255.lox
 
-import dev.edd255.lox.expr.*
-
-class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
+class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     private val errorReporter = ErrorReporter()
-    private var environment = Env()
+    private var environment = Environment()
 
-    fun interpret(stmts: List<Stmt>) {
+    fun interpret(statements: List<Statement>) {
         try {
-            for (stmt in stmts) {
+            for (stmt in statements) {
                 execute(stmt)
             }
         } catch (error: RuntimeError) {
@@ -16,22 +14,22 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         }
     }
 
-    override fun visitAssignExpr(expr: Assign): Any? {
-        val value = evaluate(expr.value)
-        value?.let { environment.assign(expr.name, it) }
+    override fun visitAssignExpression(expression: Expression.Assign): Any? {
+        val value = evaluate(expression.value)
+        value?.let { environment.assign(expression.name, it) }
         return value
     }
 
-    override fun visitBinaryExpr(expr: Binary): Any? {
-        val left = evaluate(expr.left)
-        val right = evaluate(expr.right)
-        return when (expr.op.type) {
+    override fun visitBinaryExpression(expression: Expression.Binary): Any? {
+        val left = evaluate(expression.left)
+        val right = evaluate(expression.right)
+        return when (expression.operator.type) {
             TokenType.MINUS -> {
                 if (left is Double && right is Double) {
                     left - right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expression.operator,
                         "Operand must be a number",
                     )
                 }
@@ -41,7 +39,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                     left / right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expression.operator,
                         "Operand must be a number",
                     )
                 }
@@ -51,7 +49,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                     left * right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expression.operator,
                         "Operand must be a number",
                     )
                 }
@@ -62,7 +60,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 } else if (left is String && right is String) {
                     left + right
                 } else {
-                    throw RuntimeError(expr.op, "Operands must be either numbers or strings")
+                    throw RuntimeError(expression.operator, "Operands must be either numbers or strings")
                 }
             }
             TokenType.GREATER -> {
@@ -70,7 +68,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                     left > right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expression.operator,
                         "Operand must be a number",
                     )
                 }
@@ -80,7 +78,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                     left >= right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expression.operator,
                         "Operand must be a number",
                     )
                 }
@@ -90,7 +88,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                     left < right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expression.operator,
                         "Operand must be a number",
                     )
                 }
@@ -100,7 +98,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                     left <= right
                 } else {
                     throw RuntimeError(
-                        expr.op,
+                        expression.operator,
                         "Operand must be a number",
                     )
                 }
@@ -113,13 +111,13 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         }
     }
 
-    override fun visitGroupingExpr(expr: Grouping): Any? = evaluate(expr.expr)
+    override fun visitGroupingExpression(expression: Expression.Grouping): Any? = evaluate(expression.expression)
 
-    override fun visitLiteralExpr(expr: Literal): Any? = expr.value
+    override fun visitLiteralExpression(expression: Expression.Literal): Any? = expression.value
 
-    override fun visitUnaryExpr(expr: Unary): Any? {
-        val right = evaluate(expr.right)
-        return when (expr.op.type) {
+    override fun visitUnaryExpression(expression: Expression.Unary): Any? {
+        val right = evaluate(expression.right)
+        return when (expression.operator.type) {
             TokenType.MINUS -> {
                 if (right is Double) -right else null
             }
@@ -128,25 +126,25 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         }
     }
 
-    override fun visitVariableExpr(expr: Variable): Any? {
-        return environment.get(expr.name)
+    override fun visitVariableExpression(expression: Expression.Variable): Any? {
+        return environment.get(expression.name)
     }
 
-    private fun evaluate(expr: Expr?): Any? {
-        assert(expr != null)
-        if (expr == null) return null
-        return expr.accept(this)
+    private fun evaluate(expression: Expression?): Any? {
+        assert(expression != null)
+        if (expression == null) return null
+        return expression.accept(this)
     }
 
-    private fun execute(stmt: Stmt?) {
-        stmt?.accept(this)
+    private fun execute(statement: Statement?) {
+        statement?.accept(this)
     }
 
-    private fun executeBlock(stmts: List<Stmt>, env: Env) {
+    private fun executeBlock(statements: List<Statement>, environment: Environment) {
         val previous = this.environment
         try {
-            this.environment = env
-            for (stmt in stmts) {
+            this.environment = environment
+            for (stmt in statements) {
                 execute(stmt)
             }
         } finally {
@@ -178,35 +176,35 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         }
     }
 
-    override fun visitBlockStmt(stmt: Block) {
-        executeBlock(stmt.stmts, Env(environment))
+    override fun visitBlockStatement(statement: Statement.Block) {
+        executeBlock(statement.statements, Environment(environment))
     }
 
-    override fun visitExprStmt(stmt: ExprStmt) {
-        evaluate(stmt.expr)
+    override fun visitExpressionStatement(statement: Statement.ExpressionStatement) {
+        evaluate(statement.expression)
     }
 
-    override fun visitPrintStmt(stmt: Print) {
-        val value = evaluate(stmt.expr)
+    override fun visitPrintStatement(statement: Statement.Print) {
+        val value = evaluate(statement.expression)
         println(stringify(value))
     }
 
-    override fun visitVarStmt(stmt: Var) {
-        val value = evaluate(stmt.initializer)
-        value?.let { environment.define(stmt.name.lexeme, it) }
+    override fun visitVarStatement(statement: Statement.Variable) {
+        val value = evaluate(statement.initializer)
+        value?.let { environment.define(statement.name.lexeme, it) }
     }
 
-    override fun visitIfStmt(stmt: If) {
-        if (isTruthy(evaluate(stmt.condition))) {
-            execute(stmt.thenBranch)
+    override fun visitIfStatement(statement: Statement.If) {
+        if (isTruthy(evaluate(statement.condition))) {
+            execute(statement.thenBranch)
         } else {
-            execute(stmt.elseBranch)
+            execute(statement.elseBranch)
         }
     }
 
-    override fun visitLogicalExpr(expr: Logical): Any? {
-        val left = evaluate(expr.left)
-        if (expr.operator.type == TokenType.OR) {
+    override fun visitLogicalExpression(expression: Expression.Logical): Any? {
+        val left = evaluate(expression.left)
+        if (expression.operator.type == TokenType.OR) {
             if (isTruthy(left)) {
                 return left
             }
@@ -215,12 +213,12 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 return left
             }
         }
-        return evaluate(expr.right)
+        return evaluate(expression.right)
     }
 
-    override fun visitWhileStmt(stmt: While) {
-        while (isTruthy(evaluate(stmt.condition))) {
-            execute(stmt.body)
+    override fun visitWhileStatement(statement: Statement.While) {
+        while (isTruthy(evaluate(statement.condition))) {
+            execute(statement.body)
         }
     }
 }

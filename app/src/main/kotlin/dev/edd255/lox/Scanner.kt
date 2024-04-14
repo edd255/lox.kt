@@ -18,7 +18,7 @@ class Scanner(private val source: String) {
     }
 
     private fun scanToken() {
-        when (val c: Char = advance()) {
+        when (val char: Char = advance()) {
             '(' -> addToken(TokenType.LEFT_PAREN)
             ')' -> addToken(TokenType.RIGHT_PAREN)
             '{' -> addToken(TokenType.LEFT_BRACE)
@@ -53,9 +53,9 @@ class Scanner(private val source: String) {
                 }
             }
             else -> {
-                if (c.isDigit()) {
+                if (char.isDigit()) {
                     number()
-                } else if (c.isAlpha()) {
+                } else if (char.isAlpha()) {
                     identifier()
                 } else {
                     errorReporter.error(line, "Unexpected character.")
