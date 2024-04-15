@@ -35,6 +35,10 @@ abstract class Expression {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitSetExpression(this)
     }
 
+    class Super(val keyword: Token, val method: Token) : Expression() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visitSuperExpression(this)
+    }
+
     class This(val keyword: Token) : Expression() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitThisExpression(this)
     }
@@ -56,6 +60,7 @@ abstract class Expression {
         fun visitLiteralExpression(literal: Literal): T
         fun visitLogicalExpression(logical: Logical): T
         fun visitSetExpression(set: Set): T
+        fun visitSuperExpression(superExpression: Super): T
         fun visitThisExpression(thisStatement: This): T
         fun visitUnaryExpression(unary: Unary): T
         fun visitVariableExpression(variable: Variable): T

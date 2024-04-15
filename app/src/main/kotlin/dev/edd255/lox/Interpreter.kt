@@ -184,6 +184,15 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         return value
     }
 
+    override fun visitSuperExpression(superExpression: Expression.Super): Any {
+        val distance = locals[superExpression]
+        val superclass = environment.getAt(distance!!, "super") as LoxClass
+        val obj = environment.getAt(distance - 1, "this") as LoxInstance
+        val method = superclass.findMethod(superExpression.method.lexeme)
+            ?: throw RuntimeError(superExpression.method, "Undefined property '${superExpression.method.lexeme}'")
+        return method.bind(obj)
+    }
+
     override fun visitThisExpression(thisStatement: Expression.This): Any? =
         lookUpVariable(thisStatement.keyword, thisStatement)
 
@@ -235,13 +244,24 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     }
 
     override fun visitClassStatement(classStatement: Statement.Class) {
+        val superclass = if (classStatement.superclass != null) evaluate(classStatement.superclass) else null
+        if (classStatement.superclass != null && superclass !is LoxClass) {
+            throw RuntimeError(classStatement.superclass.name, "Superclass must be a class")
+        }
         environment.define(classStatement.name.lexeme, null)
+        if (classStatement.superclass != null) {
+            environment = Environment(environment)
+            environment.define("super", superclass)
+        }
         val methods = hashMapOf<String, LoxFunction>()
         for (method in classStatement.methods) {
             val function = LoxFunction(method, environment, method.name.lexeme == "init")
             methods[method.name.lexeme] = function
         }
-        val loxClass = LoxClass(classStatement.name.lexeme, methods)
+        val loxClass = LoxClass(classStatement.name.lexeme, superclass as LoxClass, methods)
+        if (superclass != null) {
+            environment = environment.enclosing!!
+        }
         environment.assign(classStatement.name, loxClass)
     }
 

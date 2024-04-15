@@ -9,6 +9,19 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
     private var currentFunction = FunctionType.NONE
     private var currentClass = ClassType.NONE
 
+    enum class ClassType {
+        NONE,
+        CLASS,
+        SUBCLASS
+    }
+
+    enum class FunctionType {
+        FUNCTION,
+        NONE,
+        INITIALIZER,
+        METHOD
+    }
+
     //==== SCOPES ======================================================================================================
     private fun beginScope() = scopes.push(mutableMapOf())
 
@@ -48,6 +61,14 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
     override fun visitSetExpression(set: Expression.Set) {
         resolve(set.value)
         resolve(set.obj)
+    }
+
+    override fun visitSuperExpression(superExpression: Expression.Super) {
+        return when {
+            currentClass == ClassType.NONE -> ErrorReporter.error(superExpression.keyword, "Cannot use 'super' outside of a class.")
+            currentClass != ClassType.SUBCLASS -> ErrorReporter.error(superExpression.keyword, "Cannot use 'super' in a class with no superclass.")
+            else -> resolveLocal(superExpression, superExpression.keyword)
+        }
     }
 
     override fun visitUnaryExpression(unary: Expression.Unary) = resolve(unary.right)
@@ -119,6 +140,16 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         currentClass = ClassType.CLASS
         declare(classStatement.name)
         define(classStatement.name)
+        if (classStatement.name.lexeme == classStatement.superclass?.name?.lexeme)  {
+            ErrorReporter.error(classStatement.superclass.name, "A class cannot inherit from itself.")
+            return
+        }
+        if (classStatement.superclass != null) {
+            currentClass = ClassType.SUBCLASS
+            resolve(classStatement.superclass)
+            beginScope()
+            scopes.first()["super"] = true
+        }
         beginScope()
         scopes.first()["this"] = true
         for (method in classStatement.methods) {
@@ -128,8 +159,9 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
             }
             resolveFunction(method, declaration)
         }
-        currentClass = enclosingClass
+        if (classStatement.superclass != null) endScope()
         endScope()
+        currentClass = enclosingClass
     }
 
     override fun visitExpressionStatement(expressionStatement: Statement.ExpressionStatement) =

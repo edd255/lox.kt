@@ -2,7 +2,7 @@ package dev.edd255.lox
 
 import java.util.HashMap
 
-class Environment(private val enclosing: Environment? = null) {
+class Environment(internal val enclosing: Environment? = null) {
     private val values: MutableMap<String, Any?> = HashMap()
 
     fun get(name: Token): Any? {
