@@ -19,7 +19,7 @@ class AstPrinter : Expression.Visitor<String> {
 
     override fun visitLogicalExpression(logical: Expression.Logical): String = parenthesize(logical.operator.lexeme, logical.left, logical.right)
 
-    override fun visitSetExpression(set: Expression.Set): String = parenthesize("set '${set.name.lexeme}'", set.obj, set.set)
+    override fun visitSetExpression(set: Expression.Set): String = parenthesize("set '${set.name.lexeme}'", set.obj, set.value)
 
     override fun visitThisExpression(thisStatement: Expression.This): String = "this"
 

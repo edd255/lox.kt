@@ -22,9 +22,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
 
     fun interpret(statements: List<Statement>) {
         try {
-            for (stmt in statements) {
-                execute(stmt)
-            }
+            statements.forEach { execute(it) }
         } catch (error: RuntimeError) {
             ErrorReporter.runtimeError(error)
         }
@@ -44,7 +42,6 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
 
     //==== VISIT EXPRESSIONS ===========================================================================================
     private fun evaluate(expression: Expression?): Any? {
-        assert(expression != null)
         if (expression == null) return null
         return expression.accept(this)
     }
@@ -153,7 +150,6 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
 
     override fun visitGetExpression(get: Expression.Get): Any? {
         val value = evaluate(get.obj)
-        println(get.obj)
         if (value is LoxInstance) {
             return value.get(get.name)
         }
@@ -183,14 +179,13 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         if (obj !is LoxInstance) {
             throw RuntimeError(set.name, "Only instances have fields")
         }
-        val value = evaluate(set.set)
+        val value = evaluate(set.value)
         obj.set(set.name, value)
         return value
     }
 
-    override fun visitThisExpression(thisStatement: Expression.This): Any? {
-        return lookUpVariable(thisStatement.keyword, thisStatement)
-    }
+    override fun visitThisExpression(thisStatement: Expression.This): Any? =
+        lookUpVariable(thisStatement.keyword, thisStatement)
 
     override fun visitUnaryExpression(unary: Expression.Unary): Any? {
         val right = evaluate(unary.right)
@@ -203,9 +198,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         }
     }
 
-    override fun visitVariableExpression(variable: Expression.Variable): Any? {
-        return lookUpVariable(variable.name, variable)
-    }
+    override fun visitVariableExpression(variable: Expression.Variable): Any? = lookUpVariable(variable.name, variable)
 
     override fun visitCallExpression(call: Expression.Call): Any? {
         val callee = evaluate(call.callee)
@@ -231,9 +224,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         val previous = this.environment
         try {
             this.environment = environment
-            for (stmt in statements) {
-                execute(stmt)
-            }
+            statements.forEach { execute(it) }
         } finally {
             this.environment = previous
         }

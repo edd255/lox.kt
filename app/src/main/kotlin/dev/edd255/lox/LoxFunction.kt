@@ -28,7 +28,7 @@ class LoxFunction(private val declaration: Statement.Function) : LoxCallable {
             if (isInitializer) return closure?.getAt(0, "this")
             return returnValue.value
         }
-        if (!isInitializer) return closure?.getAt(0, "this")
+        if (isInitializer) return closure?.getAt(0, "this")
         return null
     }
 

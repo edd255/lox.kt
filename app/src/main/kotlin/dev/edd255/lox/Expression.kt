@@ -31,7 +31,7 @@ abstract class Expression {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitLogicalExpression(this)
     }
 
-    class Set(val obj: Expression, val name: Token, val set: Expression) : Expression() {
+    class Set(val obj: Expression, val name: Token, val value: Expression) : Expression() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitSetExpression(this)
     }
 

@@ -9,16 +9,12 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
     private var currentFunction = FunctionType.NONE
     private var currentClass = ClassType.NONE
 
-    //==== SCOPES =====================================================================================================
-    private fun beginScope() {
-        scopes.push(mutableMapOf())
-    }
+    //==== SCOPES ======================================================================================================
+    private fun beginScope() = scopes.push(mutableMapOf())
 
-    private fun endScope() {
-        scopes.pop()
-    }
+    private fun endScope() = scopes.pop()
 
-    //==== EXPRESSIONS ================================================================================================
+    //==== EXPRESSIONS =================================================================================================
     private fun resolve(expression: Expression) = expression.accept(this)
 
     override fun visitAssignExpression(assign: Expression.Assign) {
@@ -36,13 +32,9 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         call.arguments.forEach { resolve(it) }
     }
 
-    override fun visitGetExpression(get: Expression.Get) {
-        resolve(get.obj)
-    }
+    override fun visitGetExpression(get: Expression.Get) = resolve(get.obj)
 
-    override fun visitGroupingExpression(grouping: Expression.Grouping) {
-        resolve(grouping.expression)
-    }
+    override fun visitGroupingExpression(grouping: Expression.Grouping) = resolve(grouping.expression)
 
     override fun visitLiteralExpression(literal: Expression.Literal) {
         // Do nothing
@@ -54,13 +46,11 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
     }
 
     override fun visitSetExpression(set: Expression.Set) {
-        resolve(set.set)
+        resolve(set.value)
         resolve(set.obj)
     }
 
-    override fun visitUnaryExpression(unary: Expression.Unary) {
-        resolve(unary.right)
-    }
+    override fun visitUnaryExpression(unary: Expression.Unary) = resolve(unary.right)
 
     override fun visitVariableExpression(variable: Expression.Variable) {
         if (scopes.isNotEmpty() && scopes.first()[variable.name.lexeme] == false) {
@@ -69,10 +59,18 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         resolveLocal(variable, variable.name)
     }
 
-    //==== STATEMENTS =================================================================================================
+    override fun visitThisExpression(thisStatement: Expression.This) {
+        if (currentClass == ClassType.NONE) {
+            ErrorReporter.error(thisStatement.keyword, "Cannot use 'this' outside of a class.")
+            return
+        }
+        resolveLocal(thisStatement, thisStatement.keyword)
+    }
+
+    //==== STATEMENTS ==================================================================================================
     fun resolve(statements: List<Statement>) = statements.forEach { resolve(it) }
 
-    fun resolve(statement: Statement) = statement.accept(this)
+    private fun resolve(statement: Statement) = statement.accept(this)
 
     private fun resolveLocal(expression: Expression, name: Token) {
         for (i in scopes.indices) {
@@ -134,9 +132,8 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         endScope()
     }
 
-    override fun visitExpressionStatement(expressionStatement: Statement.ExpressionStatement) {
+    override fun visitExpressionStatement(expressionStatement: Statement.ExpressionStatement) =
         resolve(expressionStatement.expression)
-    }
 
     override fun visitFunctionStatement(function: Statement.Function) {
         declare(function.name)
@@ -150,9 +147,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         if (ifQuery.elseBranch != null) resolve(ifQuery.elseBranch)
     }
 
-    override fun visitPrintStatement(print: Statement.Print) {
-        resolve(print.expression)
-    }
+    override fun visitPrintStatement(print: Statement.Print) = resolve(print.expression)
 
     override fun visitReturnStatement(returnStatement: Statement.Return) {
         if (currentFunction == FunctionType.NONE) {
@@ -164,14 +159,6 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
             }
             resolve(returnStatement.value)
         }
-    }
-
-    override fun visitThisExpression(thisStatement: Expression.This) {
-        if (currentClass == ClassType.NONE) {
-            ErrorReporter.error(thisStatement.keyword, "Cannot use 'this' outside of a class.")
-            return
-        }
-        resolveLocal(thisStatement, thisStatement.keyword)
     }
 
     override fun visitVariableStatement(variable: Statement.Variable) {
@@ -186,5 +173,4 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         resolve(whileLoop.condition)
         resolve(whileLoop.body)
     }
-
 }
