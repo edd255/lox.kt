@@ -7,17 +7,14 @@ fun <T> ArrayDeque<T>.pop() = removeLastOrNull()
 class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>, Statement.Visitor<Unit> {
     private val scopes = ArrayDeque<MutableMap<String, Boolean>>()
     private var currentFunction = FunctionType.NONE
+    private var currentClass = ClassType.NONE
 
-    //==== SCOPES =====================================================================================================
-    private fun beginScope() {
-        scopes.push(mutableMapOf())
-    }
+    //==== SCOPES ======================================================================================================
+    private fun beginScope() = scopes.push(mutableMapOf())
 
-    private fun endScope() {
-        scopes.pop()
-    }
+    private fun endScope() = scopes.pop()
 
-    //==== EXPRESSIONS ================================================================================================
+    //==== EXPRESSIONS =================================================================================================
     private fun resolve(expression: Expression) = expression.accept(this)
 
     override fun visitAssignExpression(assign: Expression.Assign) {
@@ -35,9 +32,9 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         call.arguments.forEach { resolve(it) }
     }
 
-    override fun visitGroupingExpression(grouping: Expression.Grouping) {
-        resolve(grouping.expression)
-    }
+    override fun visitGetExpression(get: Expression.Get) = resolve(get.obj)
+
+    override fun visitGroupingExpression(grouping: Expression.Grouping) = resolve(grouping.expression)
 
     override fun visitLiteralExpression(literal: Expression.Literal) {
         // Do nothing
@@ -48,9 +45,12 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         resolve(logical.right)
     }
 
-    override fun visitUnaryExpression(unary: Expression.Unary) {
-        resolve(unary.right)
+    override fun visitSetExpression(set: Expression.Set) {
+        resolve(set.value)
+        resolve(set.obj)
     }
+
+    override fun visitUnaryExpression(unary: Expression.Unary) = resolve(unary.right)
 
     override fun visitVariableExpression(variable: Expression.Variable) {
         if (scopes.isNotEmpty() && scopes.first()[variable.name.lexeme] == false) {
@@ -59,10 +59,18 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         resolveLocal(variable, variable.name)
     }
 
-    //==== STATEMENTS =================================================================================================
+    override fun visitThisExpression(thisStatement: Expression.This) {
+        if (currentClass == ClassType.NONE) {
+            ErrorReporter.error(thisStatement.keyword, "Cannot use 'this' outside of a class.")
+            return
+        }
+        resolveLocal(thisStatement, thisStatement.keyword)
+    }
+
+    //==== STATEMENTS ==================================================================================================
     fun resolve(statements: List<Statement>) = statements.forEach { resolve(it) }
 
-    fun resolve(statement: Statement) = statement.accept(this)
+    private fun resolve(statement: Statement) = statement.accept(this)
 
     private fun resolveLocal(expression: Expression, name: Token) {
         for (i in scopes.indices) {
@@ -87,22 +95,6 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         scopes.first()[name.lexeme] = true
     }
 
-    override fun visitBlockStatement(block: Statement.Block) {
-        beginScope()
-        resolve(block.statements)
-        endScope()
-    }
-
-    override fun visitExpressionStatement(expressionStatement: Statement.ExpressionStatement) {
-        resolve(expressionStatement.expression)
-    }
-
-    override fun visitFunctionStatement(function: Statement.Function) {
-        declare(function.name)
-        define(function.name)
-        resolveFunction(function, FunctionType.FUNCTION)
-    }
-
     private fun resolveFunction(function: Statement.Function, type: FunctionType) {
         val enclosingFunction = currentFunction
         currentFunction = type
@@ -116,21 +108,57 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         currentFunction = enclosingFunction
     }
 
+    override fun visitBlockStatement(block: Statement.Block) {
+        beginScope()
+        resolve(block.statements)
+        endScope()
+    }
+
+    override fun visitClassStatement(classStatement: Statement.Class) {
+        val enclosingClass = currentClass
+        currentClass = ClassType.CLASS
+        declare(classStatement.name)
+        define(classStatement.name)
+        beginScope()
+        scopes.first()["this"] = true
+        for (method in classStatement.methods) {
+            var declaration = FunctionType.METHOD
+            if (method.name.lexeme == "init") {
+                declaration = FunctionType.INITIALIZER
+            }
+            resolveFunction(method, declaration)
+        }
+        currentClass = enclosingClass
+        endScope()
+    }
+
+    override fun visitExpressionStatement(expressionStatement: Statement.ExpressionStatement) =
+        resolve(expressionStatement.expression)
+
+    override fun visitFunctionStatement(function: Statement.Function) {
+        declare(function.name)
+        define(function.name)
+        resolveFunction(function, FunctionType.FUNCTION)
+    }
+
     override fun visitIfStatement(ifQuery: Statement.If) {
         resolve(ifQuery.condition)
         resolve(ifQuery.thenBranch)
         if (ifQuery.elseBranch != null) resolve(ifQuery.elseBranch)
     }
 
-    override fun visitPrintStatement(print: Statement.Print) {
-        resolve(print.expression)
-    }
+    override fun visitPrintStatement(print: Statement.Print) = resolve(print.expression)
 
     override fun visitReturnStatement(returnStatement: Statement.Return) {
         if (currentFunction == FunctionType.NONE) {
             ErrorReporter.error(returnStatement.keyword, "Cannot return from top-level code.")
         }
-        if (returnStatement.value != null) resolve(returnStatement.value)
+        if (returnStatement.value != null) {
+            if (currentFunction == FunctionType.INITIALIZER) {
+                ErrorReporter.error(returnStatement.keyword, "Cannot return a value from an initializer.")
+            }
+            resolve(returnStatement.value)
+        }
     }
 
     override fun visitVariableStatement(variable: Statement.Variable) {
@@ -145,5 +173,4 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         resolve(whileLoop.condition)
         resolve(whileLoop.body)
     }
-
 }

@@ -22,9 +22,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
 
     fun interpret(statements: List<Statement>) {
         try {
-            for (stmt in statements) {
-                execute(stmt)
-            }
+            statements.forEach { execute(it) }
         } catch (error: RuntimeError) {
             ErrorReporter.runtimeError(error)
         }
@@ -44,7 +42,6 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
 
     //==== VISIT EXPRESSIONS ===========================================================================================
     private fun evaluate(expression: Expression?): Any? {
-        assert(expression != null)
         if (expression == null) return null
         return expression.accept(this)
     }
@@ -151,9 +148,44 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         }
     }
 
+    override fun visitGetExpression(get: Expression.Get): Any? {
+        val value = evaluate(get.obj)
+        if (value is LoxInstance) {
+            return value.get(get.name)
+        }
+        throw RuntimeError(get.name, "Only instances have properties")
+    }
+
     override fun visitGroupingExpression(grouping: Expression.Grouping): Any? = evaluate(grouping.expression)
 
     override fun visitLiteralExpression(literal: Expression.Literal): Any? = literal.value
+
+    override fun visitLogicalExpression(logical: Expression.Logical): Any? {
+        val left = evaluate(logical.left)
+        if (logical.operator.type == TokenType.OR) {
+            if (isTruthy(left)) {
+                return left
+            }
+        } else {
+            if (!isTruthy(left)) {
+                return left
+            }
+        }
+        return evaluate(logical.right)
+    }
+
+    override fun visitSetExpression(set: Expression.Set): Any? {
+        val obj = evaluate(set.obj)
+        if (obj !is LoxInstance) {
+            throw RuntimeError(set.name, "Only instances have fields")
+        }
+        val value = evaluate(set.value)
+        obj.set(set.name, value)
+        return value
+    }
+
+    override fun visitThisExpression(thisStatement: Expression.This): Any? =
+        lookUpVariable(thisStatement.keyword, thisStatement)
 
     override fun visitUnaryExpression(unary: Expression.Unary): Any? {
         val right = evaluate(unary.right)
@@ -166,9 +198,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         }
     }
 
-    override fun visitVariableExpression(variable: Expression.Variable): Any? {
-        return lookUpVariable(variable.name, variable)
-    }
+    override fun visitVariableExpression(variable: Expression.Variable): Any? = lookUpVariable(variable.name, variable)
 
     override fun visitCallExpression(call: Expression.Call): Any? {
         val callee = evaluate(call.callee)
@@ -194,9 +224,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         val previous = this.environment
         try {
             this.environment = environment
-            for (stmt in statements) {
-                execute(stmt)
-            }
+            statements.forEach { execute(it) }
         } finally {
             this.environment = previous
         }
@@ -206,12 +234,23 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         executeBlock(block.statements, Environment(environment))
     }
 
+    override fun visitClassStatement(classStatement: Statement.Class) {
+        environment.define(classStatement.name.lexeme, null)
+        val methods = hashMapOf<String, LoxFunction>()
+        for (method in classStatement.methods) {
+            val function = LoxFunction(method, environment, method.name.lexeme == "init")
+            methods[method.name.lexeme] = function
+        }
+        val loxClass = LoxClass(classStatement.name.lexeme, methods)
+        environment.assign(classStatement.name, loxClass)
+    }
+
     override fun visitExpressionStatement(expressionStatement: Statement.ExpressionStatement) {
         evaluate(expressionStatement.expression)
     }
 
     override fun visitFunctionStatement(function: Statement.Function) {
-        val loxFunction = LoxFunction(function, environment)
+        val loxFunction = LoxFunction(function, environment, false)
         environment.define(function.name.lexeme, loxFunction)
     }
 
@@ -235,20 +274,6 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         } else {
             execute(ifQuery.elseBranch)
         }
-    }
-
-    override fun visitLogicalExpression(logical: Expression.Logical): Any? {
-        val left = evaluate(logical.left)
-        if (logical.operator.type == TokenType.OR) {
-            if (isTruthy(left)) {
-                return left
-            }
-        } else {
-            if (!isTruthy(left)) {
-                return left
-            }
-        }
-        return evaluate(logical.right)
     }
 
     override fun visitWhileStatement(whileLoop: Statement.While) {

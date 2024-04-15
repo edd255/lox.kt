@@ -92,6 +92,7 @@ class Parser(private val tokens: List<Token>) {
     private fun declaration(): Statement {
         return try {
             when {
+                match(TokenType.CLASS) -> classDeclaration()
                 match(TokenType.FN) -> function("function")
                 match(TokenType.VAR) -> varDeclaration()
                 else -> statement()
@@ -102,7 +103,19 @@ class Parser(private val tokens: List<Token>) {
         }
     }
 
-    private fun function(kind: String): Statement {
+    private fun classDeclaration(): Statement {
+        val name = consume(TokenType.IDENTIFIER, "Expect class name.")
+        consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
+        val methods = mutableListOf<Statement.Function>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            match(TokenType.FN)
+            methods.add(function("method"))
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
+        return Statement.Class(name, methods)
+    }
+
+    private fun function(kind: String): Statement.Function {
         val name = consume(TokenType.IDENTIFIER, "Expect $kind name.")
         consume(TokenType.LEFT_PAREN, "Expect '(' after $kind name.")
         val parameters = mutableListOf<Token>()
@@ -144,6 +157,8 @@ class Parser(private val tokens: List<Token>) {
             if (expression is Expression.Variable) {
                 val name = expression.name
                 return Expression.Assign(name, value)
+            } else if (expression is Expression.Get) {
+                return Expression.Set(expression.obj, expression.name, value)
             }
             error(equals, "Invalid assignment target.")
         }
@@ -224,6 +239,9 @@ class Parser(private val tokens: List<Token>) {
         while (true) {
             if (match(TokenType.LEFT_PAREN)) {
                 expression = finishCall(expression)
+            } else if (match(TokenType.DOT)) {
+                val name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+                expression = Expression.Get(expression, name)
             } else {
                 break
             }
@@ -251,6 +269,9 @@ class Parser(private val tokens: List<Token>) {
         if (match(TokenType.NIL)) return Expression.Literal(null)
         if (match(TokenType.NUMBER, TokenType.STRING)) {
             return Expression.Literal(previous().literal)
+        }
+        if (match(TokenType.THIS)) {
+            return Expression.This(previous())
         }
         if (match(TokenType.IDENTIFIER)) {
             return Expression.Variable(previous())
