@@ -7,7 +7,7 @@ abstract class Statement {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitBlockStatement(this)
     }
 
-    class Class(val name: Token, val methods: List<Function>) : Statement() {
+    class Class(val name: Token, val superclass: Expression.Variable?, val methods: List<Function>) : Statement() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visitClassStatement(this)
     }
 

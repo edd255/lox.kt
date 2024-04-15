@@ -105,6 +105,11 @@ class Parser(private val tokens: List<Token>) {
 
     private fun classDeclaration(): Statement {
         val name = consume(TokenType.IDENTIFIER, "Expect class name.")
+        var superclass: Expression.Variable? = null
+        if (match(TokenType.COLON)) {
+            consume(TokenType.IDENTIFIER, "Expect superclass name.")
+            superclass = Expression.Variable(previous())
+        }
         consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
         val methods = mutableListOf<Statement.Function>()
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
@@ -112,7 +117,7 @@ class Parser(private val tokens: List<Token>) {
             methods.add(function("method"))
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
-        return Statement.Class(name, methods)
+        return Statement.Class(name, superclass, methods)
     }
 
     private fun function(kind: String): Statement.Function {
@@ -269,6 +274,12 @@ class Parser(private val tokens: List<Token>) {
         if (match(TokenType.NIL)) return Expression.Literal(null)
         if (match(TokenType.NUMBER, TokenType.STRING)) {
             return Expression.Literal(previous().literal)
+        }
+        if (match(TokenType.SUPER)) {
+            val keyword = previous()
+            consume(TokenType.DOT, "Expect '.' after 'super'.")
+            val method = consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+            return Expression.Super(keyword, method)
         }
         if (match(TokenType.THIS)) {
             return Expression.This(previous())
