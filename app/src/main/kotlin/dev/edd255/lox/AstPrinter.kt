@@ -11,11 +11,17 @@ class AstPrinter : Expression.Visitor<String> {
 
     override fun visitCallExpression(call: Expression.Call): String = parenthesize("call", call.callee, *call.arguments.toTypedArray())
 
+    override fun visitGetExpression(get: Expression.Get): String = parenthesize("get '${get.name.lexeme}'", get.obj)
+
     override fun visitGroupingExpression(grouping: Expression.Grouping): String = parenthesize("group", grouping.expression)
 
     override fun visitLiteralExpression(literal: Expression.Literal): String = literal.value.toString()
 
     override fun visitLogicalExpression(logical: Expression.Logical): String = parenthesize(logical.operator.lexeme, logical.left, logical.right)
+
+    override fun visitSetExpression(set: Expression.Set): String = parenthesize("set '${set.name.lexeme}'", set.obj, set.set)
+
+    override fun visitThisExpression(thisStatement: Expression.This): String = "this"
 
     override fun visitUnaryExpression(unary: Expression.Unary): String = parenthesize(unary.operator.lexeme, unary.right)
 
