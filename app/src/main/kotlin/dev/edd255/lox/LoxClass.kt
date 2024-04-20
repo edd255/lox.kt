@@ -2,7 +2,7 @@ package dev.edd255.lox
 
 class LoxClass(
     val name: String,
-    val superclass: LoxClass?,
+    private val superclass: LoxClass?,
     private val methods: Map<String, LoxFunction>
 ) : LoxCallable {
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {

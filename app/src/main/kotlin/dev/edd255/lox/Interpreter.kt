@@ -258,9 +258,20 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
             val function = LoxFunction(method, environment, method.name.lexeme == "init")
             methods[method.name.lexeme] = function
         }
-        val loxClass = LoxClass(classStatement.name.lexeme, superclass as LoxClass, methods)
+        lateinit var loxClass: LoxClass
         if (superclass != null) {
+            loxClass = LoxClass(
+                classStatement.name.lexeme,
+                superclass as LoxClass,
+                methods
+            )
             environment = environment.enclosing!!
+        } else {
+            loxClass = LoxClass(
+                classStatement.name.lexeme,
+                null,
+                methods
+            )
         }
         environment.assign(classStatement.name, loxClass)
     }
