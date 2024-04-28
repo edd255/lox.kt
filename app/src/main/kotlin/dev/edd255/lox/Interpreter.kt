@@ -1,9 +1,15 @@
 package dev.edd255.lox
 
+import java.io.IOException
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
+import kotlin.system.exitProcess
+
 class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     private val globals = Environment()
     private val locals = hashMapOf<Expression, Int>()
     private var environment = globals
+    private val getcStream = InputStreamReader(System.`in`, StandardCharsets.UTF_8)
 
     init {
         globals.define(
@@ -13,6 +19,63 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
 
                 override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
                     return System.currentTimeMillis() / 1000.0
+                }
+
+                override fun toString(): String = "<native fn>"
+            }
+        )
+        globals.define(
+            "getc",
+            object : LoxCallable {
+                override fun arity(): Int = 0
+
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
+                    try {
+                        val c = getcStream.read()
+                        if (c < 0) {
+                            return -1.0
+                        }
+                        return c.toDouble()
+                    } catch (error: IOException) {
+                        return -1.0
+                    }
+                }
+
+                override fun toString(): String = "<native fn>"
+            }
+        )
+        globals.define(
+            "chr",
+            object : LoxCallable {
+                override fun arity(): Int = 1
+
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
+                    return Character.toString((arguments[0] as Double).toInt().toChar())
+                }
+
+                override fun toString(): String = "<native fn>"
+            }
+        )
+        globals.define(
+            "exit",
+            object : LoxCallable {
+                override fun arity(): Int = 1
+
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
+                    exitProcess((arguments[0] as Double).toInt())
+                }
+
+                override fun toString(): String = "<native fn>"
+            }
+        )
+        globals.define(
+            "print_error",
+            object : LoxCallable {
+                override fun arity(): Int = 1
+
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
+                    System.err.println(arguments[0])
+                    return Unit
                 }
 
                 override fun toString(): String = "<native fn>"
