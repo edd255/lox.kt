@@ -159,13 +159,11 @@ class Parser(private val tokens: List<Token>) {
         if (match(TokenType.EQUAL)) {
             val equals = previous()
             val value = assignment()
-            if (expression is Expression.Variable) {
-                val name = expression.name
-                return Expression.Assign(name, value)
-            } else if (expression is Expression.Get) {
-                return Expression.Set(expression.obj, expression.name, value)
+            when (expression) {
+                is Expression.Variable -> return Expression.Assign(expression.name, value)
+                is Expression.Get -> return Expression.Set(expression.obj, expression.name, value)
+                else -> error(equals, "Invalid assignment returns.")
             }
-            error(equals, "Invalid assignment target.")
         }
         return expression
     }
