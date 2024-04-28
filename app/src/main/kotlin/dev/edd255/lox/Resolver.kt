@@ -1,11 +1,9 @@
 package dev.edd255.lox
 
-fun <T> ArrayDeque<T>.push(element: T) = addLast(element)
-
-fun <T> ArrayDeque<T>.pop() = removeLastOrNull()
+import java.util.Stack
 
 class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>, Statement.Visitor<Unit> {
-    private val scopes = ArrayDeque<MutableMap<String, Boolean>>()
+    private val scopes = Stack<MutableMap<String, Boolean>>()
     private var currentFunction = FunctionType.NONE
     private var currentClass = ClassType.NONE
 
@@ -49,9 +47,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
 
     override fun visitGroupingExpression(grouping: Expression.Grouping) = resolve(grouping.expression)
 
-    override fun visitLiteralExpression(literal: Expression.Literal) {
-        // Do nothing
-    }
+    override fun visitLiteralExpression(literal: Expression.Literal) = Unit
 
     override fun visitLogicalExpression(logical: Expression.Logical) {
         resolve(logical.left)
@@ -64,17 +60,17 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
     }
 
     override fun visitSuperExpression(superExpression: Expression.Super) {
-        return when {
-            currentClass == ClassType.NONE -> ErrorReporter.error(superExpression.keyword, "Cannot use 'super' outside of a class.")
-            currentClass != ClassType.SUBCLASS -> ErrorReporter.error(superExpression.keyword, "Cannot use 'super' in a class with no superclass.")
-            else -> resolveLocal(superExpression, superExpression.keyword)
+        return when (currentClass) {
+            ClassType.NONE -> ErrorReporter.error(superExpression.keyword, "Cannot use 'super' outside of a class.")
+            ClassType.CLASS -> ErrorReporter.error(superExpression.keyword, "Cannot use 'super' in a class with no superclass.")
+            ClassType.SUBCLASS -> resolveLocal(superExpression, superExpression.keyword)
         }
     }
 
     override fun visitUnaryExpression(unary: Expression.Unary) = resolve(unary.right)
 
     override fun visitVariableExpression(variable: Expression.Variable) {
-        if (scopes.isNotEmpty() && scopes.first()[variable.name.lexeme] == false) {
+        if (scopes.isNotEmpty() && scopes.peek()[variable.name.lexeme] == false) {
             ErrorReporter.error(variable.name, "Cannot read local variable in its own initializer.")
         }
         resolveLocal(variable, variable.name)
@@ -94,8 +90,8 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
     private fun resolve(statement: Statement) = statement.accept(this)
 
     private fun resolveLocal(expression: Expression, name: Token) {
-        for (i in scopes.indices) {
-            if (name.lexeme in scopes.elementAt(i)) {
+        for (i in (scopes.size - 1) downTo 0) {
+            if (scopes[i].containsKey(name.lexeme)) {
                 interpreter.resolve(expression, scopes.size - 1 - i)
                 return
             }
@@ -104,7 +100,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
 
     private fun declare(name: Token) {
         if (scopes.isEmpty()) return
-        val scope = scopes.first()
+        val scope = scopes.peek()
         if (name.lexeme in scope) {
             ErrorReporter.error(name, "Variable with this name already declared in this scope.")
         }
@@ -113,7 +109,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
 
     private fun define(name: Token) {
         if (scopes.isEmpty()) return
-        scopes.first()[name.lexeme] = true
+        scopes.peek()[name.lexeme] = true
     }
 
     private fun resolveFunction(function: Statement.Function, type: FunctionType) {
@@ -148,19 +144,16 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
             currentClass = ClassType.SUBCLASS
             resolve(classStatement.superclass)
             beginScope()
-            scopes.first()["super"] = true
+            scopes.peek()["super"] = true
         }
         beginScope()
-        scopes.first()["this"] = true
+        scopes.peek()["this"] = true
         for (method in classStatement.methods) {
-            var declaration = FunctionType.METHOD
-            if (method.name.lexeme == "init") {
-                declaration = FunctionType.INITIALIZER
-            }
+            val declaration = if (method.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD
             resolveFunction(method, declaration)
         }
-        if (classStatement.superclass != null) endScope()
         endScope()
+        if (classStatement.superclass != null) endScope()
         currentClass = enclosingClass
     }
 
