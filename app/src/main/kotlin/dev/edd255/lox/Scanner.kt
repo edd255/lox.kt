@@ -45,13 +45,6 @@ class Scanner(private val source: String) {
             }
             '\n' -> line++
             '"' -> string()
-            'o' -> {
-                if (peek() == 'r') {
-                    addToken(TokenType.OR)
-                } else {
-                    identifier()
-                }
-            }
             else -> {
                 if (char.isDigit()) {
                     number()
