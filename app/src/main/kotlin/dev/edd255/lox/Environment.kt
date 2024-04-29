@@ -9,7 +9,7 @@ class Environment(internal val enclosing: Environment? = null) {
         return when {
             values.containsKey(name.lexeme) -> values[name.lexeme]
             enclosing != null -> enclosing.get(name)
-            else -> throw RuntimeError(name, "Tried to access undefined variable '${name.lexeme}'.")
+            else -> throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
         }
     }
 
@@ -35,7 +35,7 @@ class Environment(internal val enclosing: Environment? = null) {
         return when {
             values.containsKey(name.lexeme) -> values[name.lexeme] = value
             enclosing != null -> enclosing.assign(name, value)
-            else -> throw RuntimeError(name, "Tried to assign undefined variable '${name.lexeme}'.")
+            else -> throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
         }
     }
 }
