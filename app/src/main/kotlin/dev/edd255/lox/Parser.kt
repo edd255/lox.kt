@@ -162,7 +162,7 @@ class Parser(private val tokens: List<Token>) {
             when (expression) {
                 is Expression.Variable -> return Expression.Assign(expression.name, value)
                 is Expression.Get -> return Expression.Set(expression.obj, expression.name, value)
-                else -> error(equals, "Invalid assignment returns.")
+                else -> error(equals, "Invalid assignment target.")
             }
         }
         return expression
