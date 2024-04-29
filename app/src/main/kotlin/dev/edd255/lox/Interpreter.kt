@@ -120,39 +120,25 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         return value
     }
 
+    private fun checkBinaryExpression(left: Any?, right: Any?, operator: Token) {
+        if (left !is Double || right !is Double) throw RuntimeError(operator, "Operands must be numbers.",)
+    }
+
     override fun visitBinaryExpression(binary: Expression.Binary): Any? {
         val left = evaluate(binary.left)
         val right = evaluate(binary.right)
         return when (binary.operator.type) {
             TokenType.MINUS -> {
-                if (left is Double && right is Double) {
-                    left - right
-                } else {
-                    throw RuntimeError(
-                        binary.operator,
-                        "Operand must be a number",
-                    )
-                }
+                checkBinaryExpression(left, right, binary.operator)
+                (left as Double) - (right as Double)
             }
             TokenType.SLASH -> {
-                if (left is Double && right is Double) {
-                    left / right
-                } else {
-                    throw RuntimeError(
-                        binary.operator,
-                        "Operand must be a number",
-                    )
-                }
+                checkBinaryExpression(left, right, binary.operator)
+                (left as Double) / (right as Double)
             }
             TokenType.STAR -> {
-                if (left is Double && right is Double) {
-                    left * right
-                } else {
-                    throw RuntimeError(
-                        binary.operator,
-                        "Operand must be a number",
-                    )
-                }
+                checkBinaryExpression(left, right, binary.operator)
+                (left as Double) * (right as Double)
             }
             TokenType.PLUS -> {
                 if (left is Double && right is Double) {
@@ -160,54 +146,28 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
                 } else if (left is String && right is String) {
                     left + right
                 } else {
-                    throw RuntimeError(binary.operator, "Operands must be either numbers or strings")
+                    throw RuntimeError(binary.operator, "Operands must be two numbers or two strings.")
                 }
             }
             TokenType.GREATER -> {
-                if (left is Double && right is Double) {
-                    left > right
-                } else {
-                    throw RuntimeError(
-                        binary.operator,
-                        "Operand must be a number",
-                    )
-                }
+                checkBinaryExpression(left, right, binary.operator)
+                (left as Double) > (right as Double)
             }
             TokenType.GREATER_EQUAL -> {
-                if (left is Double && right is Double) {
-                    left >= right
-                } else {
-                    throw RuntimeError(
-                        binary.operator,
-                        "Operand must be a number",
-                    )
-                }
+                checkBinaryExpression(left, right, binary.operator)
+                (left as Double) >= (right as Double)
             }
             TokenType.LESS -> {
-                if (left is Double && right is Double) {
-                    left < right
-                } else {
-                    throw RuntimeError(
-                        binary.operator,
-                        "Operand must be a number",
-                    )
-                }
+                checkBinaryExpression(left, right, binary.operator)
+                (left as Double) < (right as Double)
             }
             TokenType.LESS_EQUAL -> {
-                if (left is Double && right is Double) {
-                    left <= right
-                } else {
-                    throw RuntimeError(
-                        binary.operator,
-                        "Operand must be a number",
-                    )
-                }
+                checkBinaryExpression(left, right, binary.operator)
+                (left as Double) <= (right as Double)
             }
             TokenType.BANG_EQUAL -> !isEqual(left, right)
             TokenType.EQUAL_EQUAL -> isEqual(left, right)
-            else -> {
-                null
-            }
+            else -> null
         }
     }
 
@@ -226,13 +186,9 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     override fun visitLogicalExpression(logical: Expression.Logical): Any? {
         val left = evaluate(logical.left)
         if (logical.operator.type == TokenType.OR) {
-            if (isTruthy(left)) {
-                return left
-            }
+            if (isTruthy(left)) return left
         } else {
-            if (!isTruthy(left)) {
-                return left
-            }
+            if (!isTruthy(left)) return left
         }
         return evaluate(logical.right)
     }
@@ -263,7 +219,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         val right = evaluate(unary.right)
         return when (unary.operator.type) {
             TokenType.MINUS -> {
-                if (right is Double) -right else null
+                if (right is Double) -right else throw RuntimeError(unary.operator, "Operand must be a number")
             }
             TokenType.BANG -> !isTruthy(right)
             else -> null
@@ -359,13 +315,13 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
 
     override fun visitVariableStatement(variable: Statement.Variable) {
         val value = evaluate(variable.initializer)
-        value?.let { environment.define(variable.name.lexeme, it) }
+        environment.define(variable.name.lexeme, value)
     }
 
     override fun visitIfStatement(ifQuery: Statement.If) {
         if (isTruthy(evaluate(ifQuery.condition))) {
             execute(ifQuery.thenBranch)
-        } else {
+        } else if (ifQuery.elseBranch != null) {
             execute(ifQuery.elseBranch)
         }
     }
@@ -381,7 +337,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         if (obj == null) return false
         return when (obj) {
             is Boolean -> obj
-            else -> false
+            else -> true
         }
     }
 

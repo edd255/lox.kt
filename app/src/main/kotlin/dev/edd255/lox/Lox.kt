@@ -13,32 +13,28 @@ class Lox {
     fun runFile(path: String) {
         val bytes: ByteArray = Files.readAllBytes(Paths.get(path))
         run(String(bytes, Charset.defaultCharset()))
-        if (ErrorReporter.hadError) {
-            exitProcess(65)
-        }
-        if (ErrorReporter.hadRuntimeError) {
-            exitProcess(70)
-        }
+        if (ErrorReporter.hadError) exitProcess(65)
+        if (ErrorReporter.hadRuntimeError) exitProcess(70)
     }
 
     fun runPrompt() {
         val input = InputStreamReader(System.`in`)
         val reader = BufferedReader(input)
-        print(
-"""
- ▄▄▄▄▄▄▄ ▄▄   ▄▄ ▄▄▄▄▄▄▄    ▄▄▄     ▄▄▄▄▄▄▄ ▄▄   ▄▄    ▄▄▄ ▄▄    ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄   
-█       █  █ █  █       █  █   █   █       █  █▄█  █  █   █  █  █ █       █       █   ▄  █ █       █   ▄  █ █       █       █       █   ▄  █  
-█▄     ▄█  █▄█  █    ▄▄▄█  █   █   █   ▄   █       █  █   █   █▄█ █▄     ▄█    ▄▄▄█  █ █ █ █    ▄  █  █ █ █ █    ▄▄▄█▄     ▄█    ▄▄▄█  █ █ █  
-  █   █ █       █   █▄▄▄   █   █   █  █ █  █       █  █   █       █ █   █ █   █▄▄▄█   █▄▄█▄█   █▄█ █   █▄▄█▄█   █▄▄▄  █   █ █   █▄▄▄█   █▄▄█▄ 
-  █   █ █   ▄   █    ▄▄▄█  █   █▄▄▄█  █▄█  ██     █   █   █  ▄    █ █   █ █    ▄▄▄█    ▄▄  █    ▄▄▄█    ▄▄  █    ▄▄▄█ █   █ █    ▄▄▄█    ▄▄  █
-  █   █ █  █ █  █   █▄▄▄   █       █       █   ▄   █  █   █ █ █   █ █   █ █   █▄▄▄█   █  █ █   █   █   █  █ █   █▄▄▄  █   █ █   █▄▄▄█   █  █ █
-  █▄▄▄█ █▄▄█ █▄▄█▄▄▄▄▄▄▄█  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄▄█ █▄▄█  █▄▄▄█▄█  █▄▄█ █▄▄▄█ █▄▄▄▄▄▄▄█▄▄▄█  █▄█▄▄▄█   █▄▄▄█  █▄█▄▄▄▄▄▄▄█ █▄▄▄█ █▄▄▄▄▄▄▄█▄▄▄█  █▄█
-
-
-"""
-        )
+//         print(
+// """
+//  ▄▄▄▄▄▄▄ ▄▄   ▄▄ ▄▄▄▄▄▄▄    ▄▄▄     ▄▄▄▄▄▄▄ ▄▄   ▄▄    ▄▄▄ ▄▄    ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄   
+// █       █  █ █  █       █  █   █   █       █  █▄█  █  █   █  █  █ █       █       █   ▄  █ █       █   ▄  █ █       █       █       █   ▄  █  
+// █▄     ▄█  █▄█  █    ▄▄▄█  █   █   █   ▄   █       █  █   █   █▄█ █▄     ▄█    ▄▄▄█  █ █ █ █    ▄  █  █ █ █ █    ▄▄▄█▄     ▄█    ▄▄▄█  █ █ █  
+//   █   █ █       █   █▄▄▄   █   █   █  █ █  █       █  █   █       █ █   █ █   █▄▄▄█   █▄▄█▄█   █▄█ █   █▄▄█▄█   █▄▄▄  █   █ █   █▄▄▄█   █▄▄█▄ 
+//   █   █ █   ▄   █    ▄▄▄█  █   █▄▄▄█  █▄█  ██     █   █   █  ▄    █ █   █ █    ▄▄▄█    ▄▄  █    ▄▄▄█    ▄▄  █    ▄▄▄█ █   █ █    ▄▄▄█    ▄▄  █
+//   █   █ █  █ █  █   █▄▄▄   █       █       █   ▄   █  █   █ █ █   █ █   █ █   █▄▄▄█   █  █ █   █   █   █  █ █   █▄▄▄  █   █ █   █▄▄▄█   █  █ █
+//   █▄▄▄█ █▄▄█ █▄▄█▄▄▄▄▄▄▄█  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄▄█ █▄▄█  █▄▄▄█▄█  █▄▄█ █▄▄▄█ █▄▄▄▄▄▄▄█▄▄▄█  █▄█▄▄▄█   █▄▄▄█  █▄█▄▄▄▄▄▄▄█ █▄▄▄█ █▄▄▄▄▄▄▄█▄▄▄█  █▄█
+//
+//
+// """
+//         )
         while (true) {
-            print(">>> ")
+            // print(">>> ")
             val line = reader.readLine() ?: break
             run(line)
             ErrorReporter.hadError = false
@@ -47,6 +43,7 @@ class Lox {
 
     private fun run(source: String) {
         val scanner = Scanner(source)
+        if (ErrorReporter.hadError) return
         val tokens: List<Token> = scanner.scanTokens()
         if (ErrorReporter.hadError) return
         val parser = Parser(tokens)
