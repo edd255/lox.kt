@@ -56,7 +56,7 @@ class AstPrinter : Expression.Visitor<String>, Statement.Visitor<String> {
         val builder = java.lang.StringBuilder()
         builder.append("(class " + classStatement.name.lexeme)
         if (classStatement.superclass != null) {
-            builder.append(" < " + print(classStatement.superclass))
+            builder.append(" : " + print(classStatement.superclass))
         }
         for (method in classStatement.methods) {
             builder.append(" " + print(method))
@@ -88,9 +88,10 @@ class AstPrinter : Expression.Visitor<String>, Statement.Visitor<String> {
         if (ifQuery.elseBranch == null) {
             return parenthesizeStatement("if", ifQuery.condition, ifQuery.thenBranch)
         }
-
         return parenthesizeStatement(
-            "if-else", ifQuery.condition, ifQuery.thenBranch,
+            "if-else",
+            ifQuery.condition,
+            ifQuery.thenBranch,
             ifQuery.elseBranch
         )
     }
@@ -131,7 +132,6 @@ class AstPrinter : Expression.Visitor<String>, Statement.Visitor<String> {
         builder.append("(").append(name)
         transform(builder, statements)
         builder.append(")")
-        println(builder.toString())
         return builder.toString()
     }
 
