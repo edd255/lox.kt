@@ -19,6 +19,14 @@ repositories {
 }
 
 dependencies {
+    // Logging
+    implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
+    implementation("org.slf4j:slf4j-simple:2.0.7")
+    implementation("org.slf4j:slf4j-api:2.0.7")
+
+    // CLI
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
+
     // Use the Kotlin JUnit 5 integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 
