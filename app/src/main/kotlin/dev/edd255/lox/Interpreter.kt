@@ -34,7 +34,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         }
         defineNative("print_error", 1) { arguments ->
             System.err.println(arguments[0])
-            Unit
+            null
         }
     }
 
