@@ -1,9 +1,7 @@
 package dev.edd255.lox
 
-import java.util.Stack
-
 class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>, Statement.Visitor<Unit> {
-    private val scopes = Stack<MutableMap<String, Boolean>>()
+    private val scopes = ArrayDeque<MutableMap<String, Boolean>>()
     private var currentFunction = FunctionType.NONE
     private var currentClass = ClassType.NONE
 
@@ -21,9 +19,9 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
     }
 
     //==== SCOPES ======================================================================================================
-    private fun beginScope() = scopes.push(mutableMapOf())
+    private fun beginScope() = scopes.addLast(mutableMapOf())
 
-    private fun endScope() = scopes.pop()
+    private fun endScope() = scopes.removeLast()
 
     //==== EXPRESSIONS =================================================================================================
     private fun resolve(expression: Expression) = expression.accept(this)
@@ -70,7 +68,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
     override fun visitUnaryExpression(unary: Expression.Unary) = resolve(unary.right)
 
     override fun visitVariableExpression(variable: Expression.Variable) {
-        if (scopes.isNotEmpty() && scopes.peek()[variable.name.lexeme] == false) {
+        if (scopes.isNotEmpty() && scopes.last()[variable.name.lexeme] == false) {
             ErrorReporter.error(variable.name, "Cannot read local variable in its own initializer.")
         }
         resolveLocal(variable, variable.name)
@@ -100,7 +98,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
 
     private fun declare(name: Token) {
         if (scopes.isEmpty()) return
-        val scope = scopes.peek()
+        val scope = scopes.last()
         if (name.lexeme in scope) {
             ErrorReporter.error(name, "Variable with this name already declared in this scope.")
         }
@@ -109,7 +107,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
 
     private fun define(name: Token) {
         if (scopes.isEmpty()) return
-        scopes.peek()[name.lexeme] = true
+        scopes.last()[name.lexeme] = true
     }
 
     private fun resolveFunction(function: Statement.Function, type: FunctionType) {
@@ -144,10 +142,10 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
             currentClass = ClassType.SUBCLASS
             resolve(classStatement.superclass)
             beginScope()
-            scopes.peek()["super"] = true
+            scopes.last()["super"] = true
         }
         beginScope()
-        scopes.peek()["this"] = true
+        scopes.last()["this"] = true
         for (method in classStatement.methods) {
             val declaration = if (method.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD
             resolveFunction(method, declaration)
