@@ -12,75 +12,42 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     private val getcStream = InputStreamReader(System.`in`, StandardCharsets.UTF_8)
 
     init {
-        globals.define(
-            "clock",
-            object : LoxCallable {
-                override fun arity(): Int = 0
-
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
-                    return System.currentTimeMillis() / 1000.0
+        defineNative("clock", 0) {
+            System.currentTimeMillis() / 1000.0
+        }
+        defineNative("getc", 0) {
+            try {
+                val c = getcStream.read()
+                if (c < 0) {
+                    return@defineNative -1.0
                 }
-
-                override fun toString(): String = "<native fn>"
+                c.toDouble()
+            } catch (error: IOException) {
+                -1.0
             }
-        )
-        globals.define(
-            "getc",
-            object : LoxCallable {
-                override fun arity(): Int = 0
+        }
+        defineNative("chr", 1) { arguments ->
+            Character.toString((arguments[0] as Double).toInt().toChar())
+        }
+        defineNative("exit", 1) { arguments ->
+            exitProcess((arguments[0] as Double).toInt())
+        }
+        defineNative("print_error", 1) { arguments ->
+            System.err.println(arguments[0])
+            Unit
+        }
+    }
 
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
-                    try {
-                        val c = getcStream.read()
-                        if (c < 0) {
-                            return -1.0
-                        }
-                        return c.toDouble()
-                    } catch (error: IOException) {
-                        return -1.0
-                    }
-                }
+    private fun defineNative(name: String, arity: Int, body: (List<Any?>) -> Any?) {
+        globals.define(name, NativeFunction(arity, body))
+    }
 
-                override fun toString(): String = "<native fn>"
-            }
-        )
-        globals.define(
-            "chr",
-            object : LoxCallable {
-                override fun arity(): Int = 1
+    private class NativeFunction(private val arityValue: Int, private val body: (List<Any?>) -> Any?) : LoxCallable {
+        override fun arity(): Int = arityValue
 
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
-                    return Character.toString((arguments[0] as Double).toInt().toChar())
-                }
+        override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? = body(arguments)
 
-                override fun toString(): String = "<native fn>"
-            }
-        )
-        globals.define(
-            "exit",
-            object : LoxCallable {
-                override fun arity(): Int = 1
-
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
-                    exitProcess((arguments[0] as Double).toInt())
-                }
-
-                override fun toString(): String = "<native fn>"
-            }
-        )
-        globals.define(
-            "print_error",
-            object : LoxCallable {
-                override fun arity(): Int = 1
-
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
-                    System.err.println(arguments[0])
-                    return Unit
-                }
-
-                override fun toString(): String = "<native fn>"
-            }
-        )
+        override fun toString(): String = "<native fn>"
     }
 
     fun interpret(statements: List<Statement>) {
