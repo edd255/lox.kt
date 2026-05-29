@@ -1,7 +1,6 @@
 package dev.edd255.tools
 
 import java.io.PrintWriter
-import java.util.Locale
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -13,27 +12,35 @@ fun main(args: Array<String>) {
     val generator = Generator()
     generator.defineAst(
         outputDir,
-        "Expr",
+        "Expression",
         listOf(
-            "Assign   : name: Token, value: Expr",
-            "Binary   : left: Expr, op: Token, right: Expr",
-            "Grouping : expr: Expr",
+            "Assign   : name: Token, value: Expression",
+            "Binary   : left: Expression, operator: Token, right: Expression",
+            "Call     : callee: Expression, paren: Token, arguments: List<Expression>",
+            "Get      : obj: Expression, name: Token",
+            "Grouping : expression: Expression",
             "Literal  : value: Any?",
-            "Logical  : left: Expr, operator: Token, right: Expr",
-            "Unary    : op: Token, right: Expr",
+            "Logical  : left: Expression, operator: Token, right: Expression",
+            "Set      : obj: Expression, name: Token, value: Expression",
+            "Super    : keyword: Token, method: Token",
+            "This     : keyword: Token",
+            "Unary    : operator: Token, right: Expression",
             "Variable : name: Token",
         ),
     )
     generator.defineAst(
         outputDir,
-        "Stmt",
+        "Statement",
         listOf(
-            "Block    : stmts: List<Stmt>",
-            "ExprStmt : expr: Expr",
-            "If       : condition: Expr, thenBranch: Stmt, elseBranch: Stmt?",
-            "Print    : expr: Expr",
-            "Var      : name: Token, initializer: Expr?",
-            "While    : condition: Expr, body: Stmt"
+            "Block               : statements: List<Statement>",
+            "Class               : name: Token, superclass: Expression.Variable?, methods: List<Function>",
+            "ExpressionStatement : expression: Expression",
+            "Function            : name: Token, parameters: List<Token>, body: List<Statement>",
+            "If                  : condition: Expression, thenBranch: Statement, elseBranch: Statement?",
+            "Print               : expression: Expression",
+            "Return              : keyword: Token, value: Expression?",
+            "Variable            : name: Token, initializer: Expression?",
+            "While               : condition: Expression, body: Statement"
         ),
     )
 }
@@ -41,26 +48,24 @@ fun main(args: Array<String>) {
 class Generator {
     fun defineAst(outputDir: String, baseName: String, types: List<String>) {
         val path = "$outputDir/$baseName.kt"
-        val writer = PrintWriter(path, "UTF-8")
-        writer.println("package dev.edd255.lox.expr")
-        writer.println()
-        writer.println("import dev.edd255.lox.Token")
-        writer.println()
-        writer.println("abstract class $baseName {")
-        writer.println("    abstract fun <T> accept(visitor: ${baseName}Visitor<T>): T")
-        writer.println("}")
-        for (type in types) {
-            val className = type.split(":")[0].trim()
-            val fields = type.split(":", ignoreCase = true, limit = 2)[1].trim()
-            defineType(writer, baseName, className, fields)
+        PrintWriter(path, "UTF-8").use { writer ->
+            writer.println("package dev.edd255.lox")
+            writer.println()
+            writer.println("abstract class $baseName {")
+            writer.println("    abstract fun <T> accept(visitor: Visitor<T>): T")
+            for (type in types) {
+                val className = type.split(":")[0].trim()
+                val fields = type.split(":", ignoreCase = true, limit = 2)[1].trim()
+                defineType(writer, baseName, className, fields)
+            }
+            defineVisitor(writer, baseName, types)
+            writer.print("}")
         }
-        defineVisitor(writer, baseName, types)
-        writer.close()
     }
 
     private fun defineType(writer: PrintWriter, baseName: String, className: String, fieldList: String) {
         writer.println()
-        writer.print("class $className(")
+        writer.print("    class $className(")
         val fields = fieldList.split(", ").iterator()
         while (fields.hasNext()) {
             val field = fields.next()
@@ -71,34 +76,35 @@ class Generator {
             }
         }
         writer.println(") : $baseName() {")
-        if (className == "ExprStmt") {
-            writer.println("    override fun <T> accept(visitor: ${baseName}Visitor<T>): T = visitor.visit$className(this)")
-        } else {
-            writer.println("    override fun <T> accept(visitor: ${baseName}Visitor<T>): T = visitor.visit$className$baseName(this)")
-        }
-        writer.println("}")
+        writer.println("        override fun <T> accept(visitor: Visitor<T>): T = visitor.${visitorMethodName(baseName, className)}(this)")
+        writer.println("    }")
     }
 
     private fun defineVisitor(writer: PrintWriter, baseName: String, types: List<String>) {
         writer.println()
-        writer.println("interface ${baseName}Visitor<T> {")
+        writer.println("    interface Visitor<T> {")
         for (type in types) {
             val typeName = type.split(":")[0].trim()
-            if (typeName == "ExprStmt") {
-                writer.println("    fun visit$typeName(${baseName.lowercase(Locale.getDefault())}: $typeName): T")
-            } else {
-                writer.println("    fun visit$typeName$baseName(${baseName.lowercase(Locale.getDefault())}: $typeName): T")
-            }
+            val parameterType = if (baseName == "Statement" && typeName == "Class") "Statement.Class" else typeName
+            writer.println("        fun ${visitorMethodName(baseName, typeName)}(${parameterName(baseName, typeName)}: $parameterType): T")
         }
-        writer.println("}")
+        writer.println("    }")
     }
 
-    private fun capitalizeFirstChar(input: String): String {
-        if (input.isEmpty()) {
-            return input
+    private fun visitorMethodName(baseName: String, typeName: String): String {
+        val suffix = if (typeName.endsWith(baseName)) "" else baseName
+        return "visit$typeName$suffix"
+    }
+
+    private fun parameterName(baseName: String, typeName: String): String {
+        return when ("$baseName.$typeName") {
+            "Expression.Super" -> "superExpression"
+            "Expression.This" -> "thisStatement"
+            "Statement.Class" -> "classStatement"
+            "Statement.If" -> "ifQuery"
+            "Statement.Return" -> "returnStatement"
+            "Statement.While" -> "whileLoop"
+            else -> typeName.replaceFirstChar { it.lowercase() }
         }
-        val firstChar = input[0].uppercaseChar()
-        val restOfChars = input.substring(1)
-        return "$firstChar$restOfChars"
     }
 }
