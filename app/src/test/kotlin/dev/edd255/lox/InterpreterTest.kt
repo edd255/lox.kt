@@ -164,13 +164,13 @@ class InterpreterTest {
         val result = runLox(
             """
             print chr(65);
-            print_error("diagnostic");
+            print print_error("diagnostic");
             """.trimIndent()
         )
 
         assertFalse(result.hadError, result.stderr)
         assertFalse(result.hadRuntimeError, result.stderr)
-        assertEquals("A\n", result.stdout)
+        assertEquals("A\nnil\n", result.stdout)
         assertEquals("diagnostic\n", result.stderr)
     }
 
