@@ -27,10 +27,10 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
             }
         }
         defineNative("chr", 1) { arguments ->
-            Character.toString((arguments[0] as Double).toInt().toChar())
+            Character.toString(nativeNumberArgument("chr", arguments, 0).toInt().toChar())
         }
         defineNative("exit", 1) { arguments ->
-            exitProcess((arguments[0] as Double).toInt())
+            exitProcess(nativeNumberArgument("exit", arguments, 0).toInt())
         }
         defineNative("print_error", 1) { arguments ->
             System.err.println(arguments[0])
@@ -48,6 +48,16 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? = body(arguments)
 
         override fun toString(): String = "<native fn>"
+    }
+
+    private class NativeArgumentError(message: String) : RuntimeException(message)
+
+    private fun nativeNumberArgument(functionName: String, arguments: List<Any?>, index: Int): Double {
+        val argument = arguments[index]
+        if (argument !is Double) {
+            throw NativeArgumentError("Argument ${index + 1} to '$functionName' must be a number.")
+        }
+        return argument
     }
 
     fun interpret(statements: List<Statement>) {
@@ -207,7 +217,11 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         if (arguments.size != callee.arity()) {
             throw RuntimeError(call.paren, "Expected ${callee.arity()} arguments but got ${arguments.size}")
         }
-        return callee.call(this, arguments)
+        return try {
+            callee.call(this, arguments)
+        } catch (error: NativeArgumentError) {
+            throw RuntimeError(call.paren, error.message ?: "Invalid native function argument.")
+        }
     }
 
     //==== VISIT STATEMENTS ============================================================================================
