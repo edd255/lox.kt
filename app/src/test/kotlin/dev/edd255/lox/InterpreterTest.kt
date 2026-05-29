@@ -175,6 +175,22 @@ class InterpreterTest {
     }
 
     @Test
+    fun `reports invalid native function argument types as runtime errors`() {
+        for ((source, expectedMessage) in listOf(
+            """chr("x");""" to "Argument 1 to 'chr' must be a number.",
+            "exit(nil);" to "Argument 1 to 'exit' must be a number.",
+        )) {
+            val result = runLox(source)
+
+            assertFalse(result.hadError, result.stderr)
+            assertTrue(result.hadRuntimeError)
+            assertEquals("", result.stdout)
+            assertTrue(result.stderr.contains(expectedMessage), result.stderr)
+            assertTrue(result.stderr.contains("[line 1]"), result.stderr)
+        }
+    }
+
+    @Test
     fun `reports runtime errors without executing following statements`() {
         val result = runLox(
             """
