@@ -3,7 +3,6 @@ package dev.edd255.lox
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import kotlin.system.exitProcess
 
 class Interpreter(private val errorReporter: ErrorReporter) : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     private val globals = Environment()
@@ -30,11 +29,25 @@ class Interpreter(private val errorReporter: ErrorReporter) : Expression.Visitor
             Character.toString(nativeNumberArgument("chr", arguments, 0).toInt().toChar())
         }
         defineNative("exit", 1) { arguments ->
-            exitProcess(nativeNumberArgument("exit", arguments, 0).toInt())
+            throw LoxExit(nativeNumberArgument("exit", arguments, 0).toInt())
         }
         defineNative("print_error", 1) { arguments ->
             System.err.println(arguments[0])
             null
+        }
+        defineNative("__instance_class_name", 1) { arguments ->
+            (arguments[0] as? LoxInstance)?.className() ?: ""
+        }
+        defineNative("__value_type", 1) { arguments ->
+            when (arguments[0]) {
+                null -> "nil"
+                is Boolean -> "boolean"
+                is Double -> "number"
+                is String -> "string"
+                is LoxCallable -> "callable"
+                is LoxInstance -> "instance"
+                else -> "unknown"
+            }
         }
     }
 

@@ -31,14 +31,48 @@ class LoxFileTest {
         }
     }
 
+    @Test
+    fun `lox lox matches lox file expectations`() {
+        val root = loxTestRoot()
+        val interpreter = root.resolve("lox.lox")
+        if (!Files.isRegularFile(interpreter)) fail("Could not find $interpreter")
+
+        val interpreterSource = Files.readString(interpreter)
+        val files = loxFiles(root)
+        if (files.isEmpty()) fail("No Lox test files found in $root")
+
+        val results = files.map { file ->
+            val source = Files.readString(file)
+            checkFile(
+                root,
+                file,
+                Expectation.parse(source),
+                runLox(interpreterSource, stdin = source),
+                treatExitCodesAsErrors = true,
+                // lox.lox exits on the first parser error; the Kotlin parser may report several.
+                requireAllErrorSnippets = false,
+            )
+        }
+        printSummary(root, results, "Lox-in-Lox file tests")
+
+        val failures = results.filterNot { it.passed }.map { it.failureReport() }
+        if (failures.isNotEmpty()) {
+            fail(failures.joinToString("\n\n"))
+        }
+    }
+
     private fun checkFile(
         root: Path,
         file: Path,
         expectation: Expectation,
         result: LoxRunResult,
+        treatExitCodesAsErrors: Boolean = false,
+        requireAllErrorSnippets: Boolean = true,
     ): FileResult {
         val relativePath = root.relativize(file)
         val failures = mutableListOf<String>()
+        val hadCompileError = result.hadError || (treatExitCodesAsErrors && result.exitCode == 65)
+        val hadRuntimeError = result.hadRuntimeError || (treatExitCodesAsErrors && result.exitCode == 70)
         if (expectation.isEmpty()) {
             failures.add("has no expectation comments")
         }
@@ -48,16 +82,16 @@ class LoxFileTest {
 
         when {
             expectation.expectsCompileError -> {
-                if (!result.hadError) failures.add("expected a compile error")
-                if (result.hadRuntimeError) failures.add("expected no runtime error")
+                if (!hadCompileError) failures.add("expected a compile error")
+                if (hadRuntimeError) failures.add("expected no runtime error")
             }
             expectation.expectsRuntimeError -> {
-                if (result.hadError) failures.add("expected no compile error")
-                if (!result.hadRuntimeError) failures.add("expected a runtime error")
+                if (hadCompileError) failures.add("expected no compile error")
+                if (!hadRuntimeError) failures.add("expected a runtime error")
             }
             else -> {
-                if (result.hadError) failures.add("expected no compile error")
-                if (result.hadRuntimeError) failures.add("expected no runtime error")
+                if (hadCompileError) failures.add("expected no compile error")
+                if (hadRuntimeError) failures.add("expected no runtime error")
             }
         }
 
@@ -97,25 +131,37 @@ class LoxFileTest {
             )
         }
 
-        for (snippet in expectation.compileErrorSnippets + expectation.runtimeErrorSnippets) {
-            if (!result.stderr.contains(snippet)) {
-                failures.add(
-                    """
-                    stderr did not contain:
-                    $snippet
-                    actual:
-                    ${result.stderr.showOutput()}
-                    """.trimIndent()
-                )
+        val errorSnippets = expectation.compileErrorSnippets + expectation.runtimeErrorSnippets
+        if (requireAllErrorSnippets) {
+            for (snippet in errorSnippets) {
+                if (!result.stderr.contains(snippet)) {
+                    failures.add(
+                        """
+                        stderr did not contain:
+                        $snippet
+                        actual:
+                        ${result.stderr.showOutput()}
+                        """.trimIndent()
+                    )
+                }
             }
+        } else if (errorSnippets.isNotEmpty() && errorSnippets.none { result.stderr.contains(it) }) {
+            failures.add(
+                """
+                stderr did not contain any expected error snippet:
+                ${errorSnippets.joinToString("\n")}
+                actual:
+                ${result.stderr.showOutput()}
+                """.trimIndent()
+            )
         }
 
         return FileResult(relativePath, failures)
     }
 
-    private fun printSummary(root: Path, results: List<FileResult>) {
+    private fun printSummary(root: Path, results: List<FileResult>, title: String = "Lox file tests") {
         println()
-        println(bold("Lox file tests: ${root.toAbsolutePath().normalize()}"))
+        println(bold("$title: ${root.toAbsolutePath().normalize()}"))
 
         for ((directory, directoryResults) in results.groupBy { it.directory }) {
             println()
@@ -160,7 +206,7 @@ class LoxFileTest {
         val stream = Files.walk(root)
         return try {
             stream
-                .filter { Files.isRegularFile(it) && it.name.endsWith(".lox") }
+                .filter { Files.isRegularFile(it) && it.name.endsWith(".lox") && it.name != "lox.lox" }
                 .sorted()
                 .toList()
         } finally {

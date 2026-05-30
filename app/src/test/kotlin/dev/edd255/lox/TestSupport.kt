@@ -1,5 +1,6 @@
 package dev.edd255.lox
 
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.charset.StandardCharsets
@@ -10,6 +11,7 @@ data class LoxRunResult(
     val stderr: String,
     val hadError: Boolean,
     val hadRuntimeError: Boolean,
+    val exitCode: Int? = null,
 )
 
 data class ScanResult(
@@ -40,40 +42,49 @@ fun parseStatements(source: String): List<Statement> {
     return statements
 }
 
-fun runLox(source: String): LoxRunResult {
+fun runLox(source: String, stdin: String = ""): LoxRunResult {
     var hadError = false
     var hadRuntimeError = false
+    var exitCode: Int? = null
     val errorReporter = ErrorReporter()
-    val output = captureOutput {
-        val tokens = Scanner(source, errorReporter).scanTokens()
-        if (!errorReporter.hadError) {
-            val statements = Parser(tokens, errorReporter).parse()
+    val output = captureOutput(stdin) {
+        try {
+            val tokens = Scanner(source, errorReporter).scanTokens()
             if (!errorReporter.hadError) {
-                val interpreter = Interpreter(errorReporter)
-                Resolver(interpreter, errorReporter).resolve(statements)
+                val statements = Parser(tokens, errorReporter).parse()
                 if (!errorReporter.hadError) {
-                    interpreter.interpret(statements)
+                    val interpreter = Interpreter(errorReporter)
+                    Resolver(interpreter, errorReporter).resolve(statements)
+                    if (!errorReporter.hadError) {
+                        interpreter.interpret(statements)
+                    }
                 }
             }
+        } catch (exit: LoxExit) {
+            exitCode = exit.code
+        } finally {
+            hadError = errorReporter.hadError
+            hadRuntimeError = errorReporter.hadRuntimeError
         }
-        hadError = errorReporter.hadError
-        hadRuntimeError = errorReporter.hadRuntimeError
     }
-    return LoxRunResult(output.stdout, output.stderr, hadError, hadRuntimeError)
+    return LoxRunResult(output.stdout, output.stderr, hadError, hadRuntimeError, exitCode)
 }
 
-private fun captureOutput(block: () -> Unit): CapturedOutput {
+private fun captureOutput(stdin: String = "", block: () -> Unit): CapturedOutput {
+    val originalIn = System.`in`
     val originalOut = System.out
     val originalErr = System.err
     val stdout = ByteArrayOutputStream()
     val stderr = ByteArrayOutputStream()
     try {
+        System.setIn(ByteArrayInputStream(stdin.toByteArray(StandardCharsets.UTF_8)))
         System.setOut(PrintStream(stdout, true, StandardCharsets.UTF_8.name()))
         System.setErr(PrintStream(stderr, true, StandardCharsets.UTF_8.name()))
         block()
     } finally {
         System.out.flush()
         System.err.flush()
+        System.setIn(originalIn)
         System.setOut(originalOut)
         System.setErr(originalErr)
     }

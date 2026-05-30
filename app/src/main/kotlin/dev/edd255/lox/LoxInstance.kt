@@ -18,5 +18,7 @@ class LoxInstance(private val loxClass: LoxClass) {
         fields[name.lexeme] = value
     }
 
+    internal fun className(): String = loxClass.name
+
     override fun toString(): String = "$loxClass instance"
 }
