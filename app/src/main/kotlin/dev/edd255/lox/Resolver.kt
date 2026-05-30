@@ -1,6 +1,9 @@
 package dev.edd255.lox
 
-class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>, Statement.Visitor<Unit> {
+class Resolver(
+    private val interpreter: Interpreter,
+    private val errorReporter: ErrorReporter
+) : Expression.Visitor<Unit>, Statement.Visitor<Unit> {
     private val scopes = ArrayDeque<MutableMap<String, Boolean>>()
     private var currentFunction = FunctionType.NONE
     private var currentClass = ClassType.NONE
@@ -59,8 +62,8 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
 
     override fun visitSuperExpression(superExpression: Expression.Super) {
         return when (currentClass) {
-            ClassType.NONE -> ErrorReporter.error(superExpression.keyword, "Cannot use 'super' outside of a class.")
-            ClassType.CLASS -> ErrorReporter.error(superExpression.keyword, "Cannot use 'super' in a class with no superclass.")
+            ClassType.NONE -> errorReporter.error(superExpression.keyword, "Cannot use 'super' outside of a class.")
+            ClassType.CLASS -> errorReporter.error(superExpression.keyword, "Cannot use 'super' in a class with no superclass.")
             ClassType.SUBCLASS -> resolveLocal(superExpression, superExpression.keyword)
         }
     }
@@ -69,14 +72,14 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
 
     override fun visitVariableExpression(variable: Expression.Variable) {
         if (scopes.isNotEmpty() && scopes.last()[variable.name.lexeme] == false) {
-            ErrorReporter.error(variable.name, "Cannot read local variable in its own initializer.")
+            errorReporter.error(variable.name, "Cannot read local variable in its own initializer.")
         }
         resolveLocal(variable, variable.name)
     }
 
     override fun visitThisExpression(thisStatement: Expression.This) {
         if (currentClass == ClassType.NONE) {
-            ErrorReporter.error(thisStatement.keyword, "Cannot use 'this' outside of a class.")
+            errorReporter.error(thisStatement.keyword, "Cannot use 'this' outside of a class.")
             return
         }
         resolveLocal(thisStatement, thisStatement.keyword)
@@ -100,7 +103,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         if (scopes.isEmpty()) return
         val scope = scopes.last()
         if (name.lexeme in scope) {
-            ErrorReporter.error(name, "Variable with this name already declared in this scope.")
+            errorReporter.error(name, "Variable with this name already declared in this scope.")
         }
         scope[name.lexeme] = false
     }
@@ -135,7 +138,7 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         declare(classStatement.name)
         define(classStatement.name)
         if (classStatement.name.lexeme == classStatement.superclass?.name?.lexeme)  {
-            ErrorReporter.error(classStatement.superclass.name, "A class cannot inherit from itself.")
+            errorReporter.error(classStatement.superclass.name, "A class cannot inherit from itself.")
         }
         if (classStatement.superclass != null) {
             currentClass = ClassType.SUBCLASS
@@ -173,11 +176,11 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
 
     override fun visitReturnStatement(returnStatement: Statement.Return) {
         if (currentFunction == FunctionType.NONE) {
-            ErrorReporter.error(returnStatement.keyword, "Cannot return from top-level code.")
+            errorReporter.error(returnStatement.keyword, "Cannot return from top-level code.")
         }
         if (returnStatement.value != null) {
             if (currentFunction == FunctionType.INITIALIZER) {
-                ErrorReporter.error(returnStatement.keyword, "Cannot return a value from an initializer.")
+                errorReporter.error(returnStatement.keyword, "Cannot return a value from an initializer.")
             }
             resolve(returnStatement.value)
         }

@@ -1,8 +1,13 @@
 package dev.edd255.lox
 
-object ErrorReporter {
+class ErrorReporter {
     var hadError: Boolean = false
     var hadRuntimeError: Boolean = false
+
+    fun reset() {
+        hadError = false
+        hadRuntimeError = false
+    }
 
     fun error(token: Token, message: String) {
         if (token.type == TokenType.EOF) {

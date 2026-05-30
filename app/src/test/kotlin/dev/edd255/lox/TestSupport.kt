@@ -23,48 +23,43 @@ private data class CapturedOutput(val stdout: String, val stderr: String)
 fun scanSource(source: String): ScanResult {
     lateinit var tokens: List<Token>
     var hadError = false
+    val errorReporter = ErrorReporter()
     val output = captureOutput {
-        resetErrorReporter()
-        tokens = Scanner(source).scanTokens()
-        hadError = ErrorReporter.hadError
+        tokens = Scanner(source, errorReporter).scanTokens()
+        hadError = errorReporter.hadError
     }
     return ScanResult(tokens, output.stderr, hadError)
 }
 
 fun parseStatements(source: String): List<Statement> {
-    resetErrorReporter()
-    val tokens = Scanner(source).scanTokens()
-    assertFalse(ErrorReporter.hadError, "scanner failed for source:\n$source")
-    val statements = Parser(tokens).parse()
-    assertFalse(ErrorReporter.hadError, "parser failed for source:\n$source")
+    val errorReporter = ErrorReporter()
+    val tokens = Scanner(source, errorReporter).scanTokens()
+    assertFalse(errorReporter.hadError, "scanner failed for source:\n$source")
+    val statements = Parser(tokens, errorReporter).parse()
+    assertFalse(errorReporter.hadError, "parser failed for source:\n$source")
     return statements
 }
 
 fun runLox(source: String): LoxRunResult {
     var hadError = false
     var hadRuntimeError = false
+    val errorReporter = ErrorReporter()
     val output = captureOutput {
-        resetErrorReporter()
-        val tokens = Scanner(source).scanTokens()
-        if (!ErrorReporter.hadError) {
-            val statements = Parser(tokens).parse()
-            if (!ErrorReporter.hadError) {
-                val interpreter = Interpreter()
-                Resolver(interpreter).resolve(statements)
-                if (!ErrorReporter.hadError) {
+        val tokens = Scanner(source, errorReporter).scanTokens()
+        if (!errorReporter.hadError) {
+            val statements = Parser(tokens, errorReporter).parse()
+            if (!errorReporter.hadError) {
+                val interpreter = Interpreter(errorReporter)
+                Resolver(interpreter, errorReporter).resolve(statements)
+                if (!errorReporter.hadError) {
                     interpreter.interpret(statements)
                 }
             }
         }
-        hadError = ErrorReporter.hadError
-        hadRuntimeError = ErrorReporter.hadRuntimeError
+        hadError = errorReporter.hadError
+        hadRuntimeError = errorReporter.hadRuntimeError
     }
     return LoxRunResult(output.stdout, output.stderr, hadError, hadRuntimeError)
-}
-
-fun resetErrorReporter() {
-    ErrorReporter.hadError = false
-    ErrorReporter.hadRuntimeError = false
 }
 
 private fun captureOutput(block: () -> Unit): CapturedOutput {

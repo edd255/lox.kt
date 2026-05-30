@@ -1,6 +1,6 @@
 package dev.edd255.lox
 
-class Scanner(private val source: String) {
+class Scanner(private val source: String, private val errorReporter: ErrorReporter) {
     private val tokens: MutableList<Token> = mutableListOf()
     private var start: Int = 0
     private var current: Int = 0
@@ -51,7 +51,7 @@ class Scanner(private val source: String) {
                 } else if (char.isAlpha()) {
                     identifier()
                 } else {
-                    ErrorReporter.error(line, "Unexpected character.")
+                    errorReporter.error(line, "Unexpected character.")
                 }
             }
         }
@@ -89,7 +89,7 @@ class Scanner(private val source: String) {
             advance()
         }
         if (isAtEnd()) {
-            ErrorReporter.error(line, "Unterminated string.")
+            errorReporter.error(line, "Unterminated string.")
             return
         }
         advance()

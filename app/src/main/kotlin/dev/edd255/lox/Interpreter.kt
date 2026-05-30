@@ -5,7 +5,7 @@ import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import kotlin.system.exitProcess
 
-class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
+class Interpreter(private val errorReporter: ErrorReporter) : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
     private val globals = Environment()
     private val locals = hashMapOf<Expression, Int>()
     private var environment = globals
@@ -64,7 +64,7 @@ class Interpreter : Expression.Visitor<Any?>, Statement.Visitor<Unit> {
         try {
             statements.forEach { execute(it) }
         } catch (error: RuntimeError) {
-            ErrorReporter.runtimeError(error)
+            errorReporter.runtimeError(error)
         }
     }
 
