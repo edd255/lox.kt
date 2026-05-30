@@ -1,0 +1,29 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class A {
+    say() {
+        print "A";
+    }
+}
+
+class B : A {
+    getClosure() {
+        fn closure() {
+            super.say();
+        }
+        return closure;
+    }
+
+    say() {
+        print "B";
+    }
+}
+
+class C : B {
+    say() {
+        print "C";
+    }
+}
+
+C().getClosure()(); // expect: A

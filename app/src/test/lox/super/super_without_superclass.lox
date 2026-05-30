@@ -1,0 +1,6 @@
+class A {
+    fn method() {
+        return super.method();
+    }
+}
+// expect compile error: Cannot use 'super' in a class with no superclass.

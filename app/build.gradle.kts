@@ -54,6 +54,10 @@ application {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+    outputs.upToDateWhen { false }
+    testLogging {
+        events("failed", "standardOut", "standardError")
+    }
 }
 
 tasks.named<JavaExec>("run") {

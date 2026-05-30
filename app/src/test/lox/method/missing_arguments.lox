@@ -1,0 +1,8 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Foo {
+    method(a, b) {}
+}
+
+Foo().method(1); // expect runtime error: Expected 2 arguments but got 1

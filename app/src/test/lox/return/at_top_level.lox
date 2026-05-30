@@ -1,0 +1,4 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+return "wat"; // Error at 'return': Cannot return from top-level code.

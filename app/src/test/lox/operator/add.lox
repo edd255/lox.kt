@@ -1,0 +1,5 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+print 123 + 456; // expect: 579
+print "str" + "ing"; // expect: string

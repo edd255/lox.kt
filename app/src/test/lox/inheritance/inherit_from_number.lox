@@ -1,0 +1,5 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+var Number = 123;
+class Foo : Number {} // expect runtime error: Superclass must be a class

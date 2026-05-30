@@ -1,0 +1,16 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+// Bound methods have identity equality.
+class Foo {
+    method() {}
+}
+
+var foo = Foo();
+var fooMethod = foo.method;
+
+// Same bound method.
+print fooMethod == fooMethod; // expect: true
+
+// Different closurizations.
+print foo.method == foo.method; // expect: false

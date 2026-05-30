@@ -1,0 +1,8 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+print "(" + "" + ")";   // expect: ()
+print "a string"; // expect: a string
+
+// Non-ASCII.
+print "A~¶Þॐஃ"; // expect: A~¶Þॐஃ

@@ -1,0 +1,14 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Foo {
+    init() {
+        print "init";
+        return;
+        print "nope";
+    }
+}
+
+var foo = Foo(); // expect: init
+print foo.init(); // expect: init
+// expect: Foo instance

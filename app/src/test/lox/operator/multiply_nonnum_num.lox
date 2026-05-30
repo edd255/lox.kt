@@ -1,0 +1,4 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+"1" * 1; // expect runtime error: Operands must be numbers.

@@ -1,0 +1,2 @@
+return 1;
+// expect compile error: Cannot return from top-level code.

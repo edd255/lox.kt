@@ -1,0 +1,15 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+{
+    var foo = "closure";
+    fn f() {
+        {
+            print foo; // expect: closure
+            var foo = "shadow";
+            print foo; // expect: shadow
+        }
+        print foo; // expect: closure
+    }
+    f();
+}

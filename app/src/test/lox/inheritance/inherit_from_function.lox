@@ -1,0 +1,6 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+fn foo() {}
+
+class Subclass : foo {} // expect runtime error: Superclass must be a class

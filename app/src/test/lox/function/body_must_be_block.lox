@@ -1,0 +1,6 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+// [line 6] Error at '123': Expect '{' before function body.
+// [c line 7] Error at end: Expect '}' after block.
+fn f() 123;

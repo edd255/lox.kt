@@ -1,0 +1,17 @@
+class A {
+    fn method() {
+        return "A";
+    }
+}
+
+class B: A {
+    fn method() {
+        return "B";
+    }
+
+    fn test() {
+        return super.method() + this.method();
+    }
+}
+
+print B().test(); // expect: AB

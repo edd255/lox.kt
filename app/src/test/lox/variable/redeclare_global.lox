@@ -1,0 +1,6 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+var a = "1";
+var a;
+print a; // expect: nil

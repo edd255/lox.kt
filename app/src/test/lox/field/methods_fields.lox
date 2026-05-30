@@ -1,0 +1,14 @@
+class Bag {
+    fn init(value) {
+        this.value = value;
+    }
+
+    fn get() {
+        return this.value;
+    }
+}
+
+var bag = Bag("lox");
+bag.extra = "field";
+print bag.get(); // expect: lox
+print bag.extra; // expect: field

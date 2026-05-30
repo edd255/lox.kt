@@ -1,0 +1,10 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+{} // By itself.
+
+// In a statement.
+if (true) {}
+if (false) {} else {}
+
+print "ok"; // expect: ok

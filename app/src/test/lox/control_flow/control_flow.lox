@@ -1,0 +1,13 @@
+var total = 0;
+for (var i = 0; i < 4; i = i + 1) {
+    total = total + i;
+}
+
+print total; // expect: 6
+if (total == 6 and true) print "ok"; else print "bad"; // expect: ok
+
+while (total > 0) {
+    total = total - 2;
+}
+
+print total; // expect: 0

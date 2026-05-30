@@ -1,0 +1,11 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Foo {
+    init(a, b) {
+        this.a = a;
+        this.b = b;
+    }
+}
+
+var foo = Foo(1, 2, 3, 4); // expect runtime error: Expected 2 arguments but got 4

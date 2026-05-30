@@ -1,0 +1,25 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Base {
+    method() {
+        print "Base.method()";
+    }
+}
+
+class Derived : Base {
+    method() {
+        super.method();
+    }
+}
+
+class OtherBase {
+    method() {
+        print "OtherBase.method()";
+    }
+}
+
+var derived = Derived();
+derived.method(); // expect: Base.method()
+Base = OtherBase;
+derived.method(); // expect: Base.method()

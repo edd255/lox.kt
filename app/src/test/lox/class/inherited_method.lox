@@ -1,0 +1,25 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Foo {
+    inFoo() {
+        print "in foo";
+    }
+}
+
+class Bar : Foo {
+    inBar() {
+        print "in bar";
+    }
+}
+
+class Baz : Bar {
+    inBaz() {
+        print "in baz";
+    }
+}
+
+var baz = Baz();
+baz.inFoo(); // expect: in foo
+baz.inBar(); // expect: in bar
+baz.inBaz(); // expect: in baz

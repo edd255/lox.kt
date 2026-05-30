@@ -1,0 +1,12 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Foo {}
+
+var foo = Foo();
+
+print foo.bar = "bar value"; // expect: bar value
+print foo.baz = "baz value"; // expect: baz value
+
+print foo.bar; // expect: bar value
+print foo.baz; // expect: baz value

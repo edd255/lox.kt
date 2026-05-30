@@ -1,0 +1,6 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+fn foo() {}
+
+foo.bar; // expect runtime error: Only instances have properties

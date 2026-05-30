@@ -1,0 +1,6 @@
+var value = "global";
+{
+    var value = "block";
+    print value; // expect: block
+}
+print value; // expect: global

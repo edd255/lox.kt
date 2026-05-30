@@ -1,0 +1,4 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+"s" + nil; // expect runtime error: Operands must be two numbers or two strings.

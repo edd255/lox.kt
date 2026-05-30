@@ -1,0 +1,25 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+fn caller(g) {
+    g();
+    // g should be a function, not nil.
+    print g == nil; // expect: false
+}
+
+fn callCaller() {
+    var capturedVar = "before";
+    var a = "a";
+
+    fn f() {
+        // Commenting the next line out prevents the bug!
+        capturedVar = "after";
+
+        // Returning anything also fixes it, even nil:
+        //return nil;
+    }
+
+    caller(f);
+}
+
+callCaller();

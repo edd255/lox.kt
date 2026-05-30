@@ -1,0 +1,20 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Base {
+    toString() { return "Base"; }
+}
+
+class Derived : Base {
+    getClosure() {
+        fn closure() {
+            return super.toString();
+        }
+        return closure;
+    }
+
+    toString() { return "Derived"; }
+}
+
+var closure = Derived().getClosure();
+print closure(); // expect: Base

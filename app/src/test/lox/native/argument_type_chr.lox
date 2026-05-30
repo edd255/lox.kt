@@ -1,0 +1,3 @@
+chr("x");
+// expect runtime error: Argument 1 to 'chr' must be a number.
+// expect runtime error: [line 1]

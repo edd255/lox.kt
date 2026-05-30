@@ -1,0 +1,4 @@
+class A: A {}
+print this;
+// expect compile error: A class cannot inherit from itself.
+// expect compile error: Cannot use 'this' outside of a class.

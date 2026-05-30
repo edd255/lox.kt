@@ -1,0 +1,6 @@
+print 1 + 2 * 3; // expect: 7
+print (1 + 2) * 3; // expect: 9
+print "lo" + "x"; // expect: lox
+print !nil; // expect: true
+print !false; // expect: true
+print !!true; // expect: true

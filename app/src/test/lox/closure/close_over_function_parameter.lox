@@ -1,0 +1,14 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+var f;
+
+fn foo(param) {
+    fn f_() {
+        print param;
+    }
+    f = f_;
+}
+foo("param");
+
+f(); // expect: param

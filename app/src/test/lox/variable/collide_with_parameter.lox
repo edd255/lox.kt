@@ -1,0 +1,6 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+fn foo(a) {
+    var a; // Error at 'a': Variable with this name already declared in this scope.
+}

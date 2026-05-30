@@ -1,0 +1,15 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+{
+    fn isEven(n) {
+        if (n == 0) return true;
+        return isOdd(n - 1); // expect runtime error: Undefined variable 'isOdd'
+    }
+
+    fn isOdd(n) {
+        return isEven(n - 1);
+    }
+
+    isEven(4);
+}

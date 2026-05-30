@@ -1,0 +1,11 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+{
+    var a = "local";
+    {
+        var a = "shadow";
+        print a; // expect: shadow
+    }
+    print a; // expect: local
+}

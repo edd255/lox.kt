@@ -1,0 +1,12 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+// Unicode characters are allowed in comments.
+//
+// Latin 1 Supplement: £§¶ÜÞ
+// Latin Extended-A: ĐĦŋœ
+// Latin Extended-B: ƂƢƩǁ
+// Other stuff: ឃᢆ᯽₪ℜ↩⊗┺░
+// Emoji: ☃☺♣
+
+print "ok"; // expect: ok

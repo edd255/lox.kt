@@ -1,0 +1,13 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+var a = "outer";
+{
+    fn foo() {
+        print a;
+    }
+
+    foo(); // expect: outer
+    var a = "inner";
+    foo(); // expect: outer
+}

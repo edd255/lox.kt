@@ -1,0 +1,10 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Foo {
+    method() {
+        print method; // expect runtime error: Undefined variable 'method'
+    }
+}
+
+Foo().method();

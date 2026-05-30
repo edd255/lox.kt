@@ -1,0 +1,19 @@
+fn fib(n) {
+    if (n <= 1) return n;
+    return fib(n - 2) + fib(n - 1);
+}
+
+print fib(6); // expect: 8
+
+fn makeCounter() {
+    var i = 0;
+    fn count() {
+        i = i + 1;
+        return i;
+    }
+    return count;
+}
+
+var counter = makeCounter();
+print counter(); // expect: 1
+print counter(); // expect: 2

@@ -1,0 +1,5 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+print 5 * 3; // expect: 15
+print 12.34 * 0.3; // expect: 3.702

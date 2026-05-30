@@ -1,0 +1,8 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+fn f() {
+    if (false) "no"; else return "ok";
+}
+
+print f(); // expect: ok

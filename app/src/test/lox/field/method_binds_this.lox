@@ -1,0 +1,19 @@
+// Adapted from Ben Hoyt's loxlox test suite.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2017 Ben Hoyt.
+class Foo {
+    sayName() {
+        print this.name;
+    }
+}
+
+var foo1 = Foo();
+foo1.name = "foo1";
+
+var foo2 = Foo();
+foo2.name = "foo2";
+
+// Store the method reference on another object.
+foo2.callback = foo1.sayName;
+// Still retains original receiver.
+foo2.callback(); // expect: foo1

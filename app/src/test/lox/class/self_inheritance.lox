@@ -1,0 +1,2 @@
+class A: A {}
+// expect compile error: A class cannot inherit from itself.
