@@ -55,4 +55,20 @@ class ResolverTest {
         assertEquals("", result.stdout)
         assertTrue(result.stderr.contains("A class cannot inherit from itself."), result.stderr)
     }
+
+    @Test
+    fun `restores class state after self inheritance errors`() {
+        val result = runLox(
+            """
+            class A: A {}
+            print this;
+            """.trimIndent()
+        )
+
+        assertTrue(result.hadError)
+        assertFalse(result.hadRuntimeError)
+        assertEquals("", result.stdout)
+        assertTrue(result.stderr.contains("A class cannot inherit from itself."), result.stderr)
+        assertTrue(result.stderr.contains("Cannot use 'this' outside of a class."), result.stderr)
+    }
 }

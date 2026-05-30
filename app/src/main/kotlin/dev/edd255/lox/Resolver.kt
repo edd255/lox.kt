@@ -136,7 +136,6 @@ class Resolver(private val interpreter: Interpreter) : Expression.Visitor<Unit>,
         define(classStatement.name)
         if (classStatement.name.lexeme == classStatement.superclass?.name?.lexeme)  {
             ErrorReporter.error(classStatement.superclass.name, "A class cannot inherit from itself.")
-            return
         }
         if (classStatement.superclass != null) {
             currentClass = ClassType.SUBCLASS

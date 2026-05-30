@@ -43,13 +43,7 @@ class AstPrinter : Expression.Visitor<String>, Statement.Visitor<String> {
         parenthesizeExpression("assign '${assign.name.lexeme}'", assign.value)
 
     override fun visitBlockStatement(block: Statement.Block): String {
-        val builder = java.lang.StringBuilder()
-        builder.append("(block ")
-        for (statement in block.statements) {
-            builder.append(statement.accept(this))
-        }
-        builder.append(")")
-        return builder.toString()
+        return parenthesizeStatement("block", block.statements)
     }
 
     override fun visitClassStatement(classStatement: Statement.Class): String {
@@ -130,20 +124,19 @@ class AstPrinter : Expression.Visitor<String>, Statement.Visitor<String> {
     private fun parenthesizeStatement(name: String, vararg statements: Any): String {
         val builder = StringBuilder()
         builder.append("(").append(name)
-        transform(builder, statements)
+        transform(builder, *statements)
         builder.append(")")
         return builder.toString()
     }
 
     private fun transform(builder: StringBuilder, vararg statements: Any) {
         for (statement in statements) {
-            builder.append(" ")
             when (statement) {
-                is Expression -> builder.append(statement.accept(this))
-                is Statement -> builder.append(statement.accept(this))
-                is Token -> builder.append(statement.lexeme)
-                is List<*> -> transform(builder, statements)
-                else -> builder.append(statement)
+                is List<*> -> transform(builder, *statement.filterNotNull().toTypedArray())
+                is Expression -> builder.append(" ").append(statement.accept(this))
+                is Statement -> builder.append(" ").append(statement.accept(this))
+                is Token -> builder.append(" ").append(statement.lexeme)
+                else -> builder.append(" ").append(statement)
             }
         }
     }
