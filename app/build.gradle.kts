@@ -11,6 +11,9 @@ plugins {
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
+
+    // Add support for compiling the JVM application to a native executable.
+    id("org.graalvm.buildtools.native") version "1.1.1"
 }
 
 repositories {
@@ -49,6 +52,15 @@ java {
 application {
     // Define the main class for the application.
     mainClass = "dev.edd255.lox.MainKt"
+}
+
+graalvmNative {
+    toolchainDetection.set(false)
+    binaries {
+        named("main") {
+            imageName.set("lox")
+        }
+    }
 }
 
 tasks.named<Test>("test") {
