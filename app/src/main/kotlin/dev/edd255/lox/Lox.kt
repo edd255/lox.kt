@@ -2,26 +2,24 @@ package dev.edd255.lox
 
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
-import kotlin.system.exitProcess
+import java.nio.charset.StandardCharsets
 
 class Lox {
     private val errorReporter = ErrorReporter()
     private val interpreter = Interpreter(errorReporter)
 
-    fun runFile(path: String) {
-        val bytes: ByteArray = Files.readAllBytes(Paths.get(path))
-        run(String(bytes, Charset.defaultCharset()))
-        if (errorReporter.hadError) exitProcess(65)
-        if (errorReporter.hadRuntimeError) exitProcess(70)
+    fun runFile(path: String): ExecutionResult {
+        val source = Files.readString(Paths.get(path), StandardCharsets.UTF_8)
+        return run(source)
     }
 
-    fun runPrompt() {
-        val input = InputStreamReader(System.`in`)
+    fun runPrompt(showBanner: Boolean = true) {
+        val input = InputStreamReader(System.`in`, StandardCharsets.UTF_8)
         val reader = BufferedReader(input)
-         print(
+        if (showBanner) {
+            print(
 """
  ▄▄▄▄▄▄▄ ▄▄   ▄▄ ▄▄▄▄▄▄▄    ▄▄▄     ▄▄▄▄▄▄▄ ▄▄   ▄▄    ▄▄▄ ▄▄    ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄
 █       █  █ █  █       █  █   █   █       █  █▄█  █  █   █  █  █ █       █       █   ▄  █ █       █   ▄  █ █       █       █       █   ▄  █
@@ -33,7 +31,8 @@ class Lox {
 
 
 """
-         )
+            )
+        }
         while (true) {
             print(">>> ")
             val line = reader.readLine() ?: break
@@ -41,18 +40,23 @@ class Lox {
         }
     }
 
-    private fun run(source: String) {
+    fun runSource(source: String): ExecutionResult = run(source)
+
+    private fun run(source: String): ExecutionResult {
         errorReporter.reset()
         val scanner = Scanner(source, errorReporter)
         val tokens: List<Token> = scanner.scanTokens()
-        if (errorReporter.hadError) return
+        if (errorReporter.hadError) return currentResult()
         val parser = Parser(tokens, errorReporter)
-        if (errorReporter.hadError) return
         val statements = parser.parse()
-        if (errorReporter.hadError) return
+        if (errorReporter.hadError) return currentResult()
         val resolver = Resolver(interpreter, errorReporter)
         resolver.resolve(statements)
-        if (errorReporter.hadError) return
+        if (errorReporter.hadError) return currentResult()
         interpreter.interpret(statements)
+        return currentResult()
     }
+
+    private fun currentResult(): ExecutionResult =
+        ExecutionResult(errorReporter.hadError, errorReporter.hadRuntimeError)
 }

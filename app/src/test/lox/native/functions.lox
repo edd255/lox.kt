@@ -1,3 +1,4 @@
 print chr(65); // expect: A
 print print_error("diagnostic"); // expect: nil
 // expect stderr: diagnostic
+print getc(); // expect: -1

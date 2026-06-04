@@ -1,0 +1,12 @@
+// Kotlin-specific native functions. The Lox-in-Lox interpreter does not implement these extension hooks.
+print __value_type(nil); // expect: nil
+print __value_type(true); // expect: boolean
+print __value_type(123); // expect: number
+print __value_type("lox"); // expect: string
+print __value_type(clock); // expect: callable
+print __value_type(clock()); // expect: number
+class Bag {}
+var bag = Bag();
+print __value_type(bag); // expect: instance
+print __instance_class_name(bag); // expect: Bag
+print __instance_class_name("not an instance"); // expect:

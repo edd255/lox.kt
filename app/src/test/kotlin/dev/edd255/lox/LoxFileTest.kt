@@ -1,63 +1,56 @@
 package dev.edd255.lox
 
+import java.nio.charset.StandardCharsets
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.name
-import kotlin.test.Test
+import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.DynamicTest.dynamicTest
+import org.junit.jupiter.api.TestFactory
 import kotlin.test.fail
 
 class LoxFileTest {
-    private val ansiBold = "\u001B[1m"
-    private val ansiGreen = "\u001B[32m"
-    private val ansiRed = "\u001B[31m"
-    private val ansiReset = "\u001B[0m"
+    private val loxLoxExcludedFiles = setOf("native/kotlin_extensions.lox")
 
-    @Test
-    fun `lox files match expectations`() {
+    @TestFactory
+    fun `lox files match expectations`(): List<DynamicTest> {
         val root = loxTestRoot()
         val files = loxFiles(root)
         if (files.isEmpty()) fail("No Lox test files found in $root")
 
-        val results = files.map { file ->
-            val source = Files.readString(file)
-            checkFile(root, file, Expectation.parse(source), runLox(source))
-        }
-        printSummary(root, results)
-
-        val failures = results.filterNot { it.passed }.map { it.failureReport() }
-        if (failures.isNotEmpty()) {
-            fail(failures.joinToString("\n\n"))
+        return files.map { file ->
+            dynamicTest("kotlin: ${relativeName(root, file)}") {
+                val source = Files.readString(file, StandardCharsets.UTF_8)
+                checkFile(root, file, Expectation.parse(source), runLox(source)).failIfNeeded()
+            }
         }
     }
 
-    @Test
-    fun `lox lox matches lox file expectations`() {
+    @TestFactory
+    fun `lox lox matches lox file expectations`(): List<DynamicTest> {
         val root = loxTestRoot()
         val interpreter = root.resolve("lox.lox")
         if (!Files.isRegularFile(interpreter)) fail("Could not find $interpreter")
 
-        val interpreterSource = Files.readString(interpreter)
-        val files = loxFiles(root)
+        val interpreterSource = Files.readString(interpreter, StandardCharsets.UTF_8)
+        val files = loxFiles(root).filterNot { relativeName(root, it) in loxLoxExcludedFiles }
         if (files.isEmpty()) fail("No Lox test files found in $root")
 
-        val results = files.map { file ->
-            val source = Files.readString(file)
-            checkFile(
-                root,
-                file,
-                Expectation.parse(source),
-                runLox(interpreterSource, stdin = source),
-                treatExitCodesAsErrors = true,
-                // lox.lox exits on the first parser error; the Kotlin parser may report several.
-                requireAllErrorSnippets = false,
-            )
-        }
-        printSummary(root, results, "Lox-in-Lox file tests")
-
-        val failures = results.filterNot { it.passed }.map { it.failureReport() }
-        if (failures.isNotEmpty()) {
-            fail(failures.joinToString("\n\n"))
+        return files.map { file ->
+            dynamicTest("lox.lox: ${relativeName(root, file)}") {
+                val source = Files.readString(file, StandardCharsets.UTF_8)
+                checkFile(
+                    root,
+                    file,
+                    Expectation.parse(source),
+                    runLox(interpreterSource, stdin = source),
+                    treatExitCodesAsErrors = true,
+                    // lox.lox exits on the first parser error; the Kotlin parser may report several.
+                    requireAllErrorSnippets = false,
+                ).failIfNeeded()
+            }
         }
     }
 
@@ -159,32 +152,11 @@ class LoxFileTest {
         return FileResult(relativePath, failures)
     }
 
-    private fun printSummary(root: Path, results: List<FileResult>, title: String = "Lox file tests") {
-        println()
-        println(bold("$title: ${root.toAbsolutePath().normalize()}"))
-
-        for ((directory, directoryResults) in results.groupBy { it.directory }) {
-            println()
-            println(bold("[$directory]"))
-            directoryResults.forEach { result ->
-                println("${formatStatus(result)} ${result.relativePath.fileName}")
-            }
-            val passed = directoryResults.count { it.passed }
-            println("${bold("Summary:")} $passed/${directoryResults.size} passed")
-        }
-
-        val passed = results.count { it.passed }
-        println()
-        println("${bold("Total:")} $passed/${results.size} passed")
-    }
-
     private data class FileResult(
         val relativePath: Path,
         val failures: List<String>,
     ) {
         val passed: Boolean = failures.isEmpty()
-        val status: String = if (passed) "PASS" else "FAIL"
-        val directory: String = relativePath.parent?.toString() ?: "."
 
         fun failureReport(): String = buildString {
             append(relativePath)
@@ -193,6 +165,10 @@ class LoxFileTest {
                 appendLine(failure.prependIndent("  "))
             }
         }.trimEnd()
+
+        fun failIfNeeded() {
+            if (!passed) fail(failureReport())
+        }
     }
 
     private fun loxTestRoot(): Path =
@@ -213,6 +189,9 @@ class LoxFileTest {
             stream.close()
         }
     }
+
+    private fun relativeName(root: Path, file: Path): String =
+        root.relativize(file).toString().replace(File.separatorChar, '/')
 
     private data class Expectation(
         val stdoutLines: List<String>,
@@ -279,12 +258,4 @@ class LoxFileTest {
     private fun String.showOutput(): String =
         if (isEmpty()) "<empty>" else this
 
-    private fun formatStatus(result: FileResult): String =
-        if (result.passed) greenBold(result.status) else redBold(result.status)
-
-    private fun bold(text: String): String = "$ansiBold$text$ansiReset"
-
-    private fun greenBold(text: String): String = "$ansiBold$ansiGreen$text$ansiReset"
-
-    private fun redBold(text: String): String = "$ansiBold$ansiRed$text$ansiReset"
 }

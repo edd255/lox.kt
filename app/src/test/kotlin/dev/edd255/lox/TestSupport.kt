@@ -20,7 +20,7 @@ data class ScanResult(
     val hadError: Boolean,
 )
 
-private data class CapturedOutput(val stdout: String, val stderr: String)
+data class CapturedOutput(val stdout: String, val stderr: String)
 
 fun scanSource(source: String): ScanResult {
     lateinit var tokens: List<Token>
@@ -43,34 +43,25 @@ fun parseStatements(source: String): List<Statement> {
 }
 
 fun runLox(source: String, stdin: String = ""): LoxRunResult {
-    var hadError = false
-    var hadRuntimeError = false
+    var executionResult = ExecutionResult(false, false)
     var exitCode: Int? = null
-    val errorReporter = ErrorReporter()
     val output = captureOutput(stdin) {
         try {
-            val tokens = Scanner(source, errorReporter).scanTokens()
-            if (!errorReporter.hadError) {
-                val statements = Parser(tokens, errorReporter).parse()
-                if (!errorReporter.hadError) {
-                    val interpreter = Interpreter(errorReporter)
-                    Resolver(interpreter, errorReporter).resolve(statements)
-                    if (!errorReporter.hadError) {
-                        interpreter.interpret(statements)
-                    }
-                }
-            }
+            executionResult = Lox().runSource(source)
         } catch (exit: LoxExit) {
             exitCode = exit.code
-        } finally {
-            hadError = errorReporter.hadError
-            hadRuntimeError = errorReporter.hadRuntimeError
         }
     }
-    return LoxRunResult(output.stdout, output.stderr, hadError, hadRuntimeError, exitCode)
+    return LoxRunResult(
+        output.stdout,
+        output.stderr,
+        executionResult.hadCompileError,
+        executionResult.hadRuntimeError,
+        exitCode,
+    )
 }
 
-private fun captureOutput(stdin: String = "", block: () -> Unit): CapturedOutput {
+fun captureOutput(stdin: String = "", block: () -> Unit): CapturedOutput {
     val originalIn = System.`in`
     val originalOut = System.out
     val originalErr = System.err
