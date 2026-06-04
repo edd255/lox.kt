@@ -1,0 +1,19 @@
+class Animal {
+    speak() {
+        print "generic sound";
+    }
+}
+
+class Dog : Animal {
+    speak() {
+        print "woof";
+    }
+
+    parentSpeak() {
+        super.speak();
+    }
+}
+
+var dog = Dog();
+dog.speak();
+dog.parentSpeak();

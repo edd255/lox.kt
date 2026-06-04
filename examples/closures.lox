@@ -1,0 +1,15 @@
+fn makeCounter(label) {
+    var count = 0;
+
+    fn next() {
+        count = count + 1;
+        print label;
+        print count;
+    }
+
+    return next;
+}
+
+var clicks = makeCounter("click");
+clicks();
+clicks();

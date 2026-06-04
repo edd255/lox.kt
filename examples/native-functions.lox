@@ -1,0 +1,6 @@
+print chr(76) + chr(111) + chr(120);
+print __value_type(clock);
+print __value_type(clock());
+
+class Example {}
+print __instance_class_name(Example());
