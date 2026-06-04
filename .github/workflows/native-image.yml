@@ -1,0 +1,40 @@
+name: Native Image
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  native-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up GraalVM 21
+        uses: graalvm/setup-graalvm@329c42c5f4c343bceb505f0b28cc8499bc2bf174 # v1.5.4
+        with:
+          distribution: graalvm-community
+          java-version: "21"
+          components: native-image
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: "true"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
+        with:
+          cache-provider: basic
+
+      - name: Build native executable
+        run: ./gradlew --no-daemon -Dorg.gradle.java.installations.paths="$GRAALVM_HOME" :app:nativeCompile
+
+      - name: Smoke test native executable
+        run: |
+          output="$(./app/build/native/nativeCompile/lox examples/fibonacci.lox)"
+          test "$output" = "55"
